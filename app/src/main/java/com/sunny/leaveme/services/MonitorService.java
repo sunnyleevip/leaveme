@@ -1,0 +1,303 @@
+package com.sunny.leaveme.services;
+
+import android.app.ActivityManager;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
+
+import com.sunny.leaveme.SensorReader;
+import com.sunny.leaveme.SensorReader.SensorChangedListener;
+import com.sunny.leaveme.activities.ScreenBlockerActivity;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class MonitorService extends Service {
+    private static final String TAG = "MonitorService";
+    private final static String ACTION_STOP_SCREEN_BLOCKER = "com.sunny.leaveme.ACTION_STOP_SCREEN_BLOCKER";
+    private final static String ACTION_START_MONITOR = "com.sunny.leaveme.ACTION_START_MONITOR";
+    private final static String ACTION_STOP_MONITOR = "com.sunny.leaveme.ACTION_STOP_MONITOR";
+    private final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
+    private final static int MONITOR_CHECK = 101;
+    private final static float SENSOR_THRESHOLD_LIGHT_LOW = 1.0f;
+    private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
+
+    private int mReason = MONITOR_REASON_NONE;
+    private final static int MONITOR_REASON_NONE = 0;
+    private final static int MONITOR_REASON_ALARM = 1;
+    private final static int MONITOR_REASON_LIGHT = 2;
+
+    private LocalBroadcastManager mLocalBroadcastManager;
+
+    private static boolean mIsTimerRunning = false;
+    private final static TimerHandler mTimerHandler = new TimerHandler();
+
+    private static class TimerHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MONITOR_CHECK:
+                    if (!isScreenOn()) {
+                        break;
+                    }
+
+                    final int PROCESS_STATE_TOP = 2;
+                    ActivityManager.RunningAppProcessInfo currentInfo = null;
+                    Field field = null;
+                    try {
+                        field = ActivityManager.RunningAppProcessInfo.class.getDeclaredField("processState");
+                    } catch (Exception ignored) {
+                    }
+                    ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                    List<ActivityManager.RunningAppProcessInfo> appList = am.getRunningAppProcesses();
+                    for (ActivityManager.RunningAppProcessInfo app : appList) {
+                        if (app.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                                && app.importanceReasonCode == ActivityManager.RunningAppProcessInfo.REASON_UNKNOWN) {
+                            Integer state = null;
+                            try {
+                                if (field != null) {
+                                    state = field.getInt(app);
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "field.getInt(app) Exception");
+                                e.printStackTrace();
+                            }
+                            if (state != null && state == PROCESS_STATE_TOP) {
+                                currentInfo = app;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (currentInfo != null) {
+                        Log.d(TAG, "packageName: " + currentInfo.processName);
+                        if (!currentInfo.processName.equals("com.sunny.leaveme")) {
+                            Log.d(TAG, "running something else");
+                            startScreenBlocker();
+                        }
+                    } else {
+                        Log.d(TAG, "running something else");
+                        startScreenBlocker();
+                    }
+
+                    break;
+            }
+        }
+    }
+
+    private static TimerTask mTask = null;
+    private static Timer mTimer = null;
+    private static Context mContext = null;
+    private LockScreenReceiver mLockScreenReceiver;
+
+    private SensorReader mSensorReader = null;
+
+    @Override
+    public void onCreate() {
+        mContext = this;
+        registerScreenLockReceiver();
+        updateUninstalledPackages();
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_START_MONITOR);
+        intentFilter.addAction(ACTION_STOP_MONITOR);
+        intentFilter.addAction(ACTION_UPDATE_LIGHT_SWITCH_VALUE);
+        mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
+        mSensorReader = new SensorReader(this);
+        if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
+            // support light sensor
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            if (prefs.getBoolean(PREFERENCE_KEY_LIGHT_DETECT, true)) {
+                mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
+            }
+        }
+        mSensorReader.start();
+        Log.d(TAG, "MonitorService onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "MonitorService onDestroy");
+        mSensorReader.stop();
+        mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
+        unregisterReceiver(mLockScreenReceiver);
+        stopMonitorTimer();
+        stopScreenBlocker();
+    }
+
+    private BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "mLocalBroadcastReceiver.onReceive");
+            if (intent.getAction().equals(ACTION_START_MONITOR)) {
+                mReason = MONITOR_REASON_ALARM;
+                startMonitorTimer();
+                mSensorReader.start();
+            } else if (intent.getAction().equals(ACTION_STOP_MONITOR)) {
+                mReason = MONITOR_REASON_NONE;
+                stopMonitorTimer();
+                mSensorReader.stop();
+            } else if (intent.getAction().equals(ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
+                boolean isChecked = intent.getBooleanExtra("light_switch", true);
+                if (isChecked) {
+                    mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
+                    mSensorReader.start();
+                } else {
+                    mSensorReader.removeSensorChangedListener(Sensor.TYPE_LIGHT);
+                    mSensorReader.stopWithNoListener();
+                }
+            }
+        }
+    };
+
+    SensorChangedListener mSensorChangedListener = new SensorChangedListener(){
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            Log.d(TAG, "onSensorChanged, value: " + event.values[0]);
+            if (event.values[0] < SENSOR_THRESHOLD_LIGHT_LOW) {
+                mReason = MONITOR_REASON_LIGHT;
+                startMonitorTimer();
+                startScreenBlocker();
+            } else {
+                mReason = MONITOR_REASON_NONE;
+                stopMonitorTimer();
+                stopScreenBlocker();
+            }
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    private void registerScreenLockReceiver() {
+        mLockScreenReceiver = new LockScreenReceiver();
+        IntentFilter lockFilter = new IntentFilter();
+        lockFilter.addAction(Intent.ACTION_SCREEN_ON);
+        lockFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        lockFilter.addAction(Intent.ACTION_USER_PRESENT);
+        registerReceiver(mLockScreenReceiver, lockFilter);
+    }
+
+    private class LockScreenReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && intent.getAction() != null) {
+                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                    Log.d(TAG, "Do nothing");
+                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                    Log.d(TAG, "stop timer");
+                    stopMonitorTimer();
+                    mSensorReader.stop();
+                } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
+                    Log.d(TAG, "start timer");
+                    if (mReason != MONITOR_REASON_NONE) {
+                        startMonitorTimer();
+                        mSensorReader.start();
+                    }
+                }
+            }
+        }
+    }
+
+    public static class receiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+                Intent i= new Intent(context, MonitorService.class);
+                context.startService(i);
+            }
+
+            if ((intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED))
+                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_REMOVED))
+                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_REPLACED))
+                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_CHANGED))
+                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_DATA_CLEARED))
+                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_RESTARTED))) {
+                Log.d(TAG, "Package changed");
+                //updateUninstalledPackages();
+            }
+        }
+    }
+
+    private void updateUninstalledPackages() {
+        List<PackageInfo> packages = getPackageManager().getInstalledPackages(0);
+        for (int i = 0; i < packages.size(); ++i) {
+            PackageInfo packageInfo = packages.get(i);
+            //Log.d(TAG, "packageInfo.packageName == " + packageInfo.packageName);
+        }
+    }
+
+    private static void stopMonitorTimer() {
+        if (mIsTimerRunning) {
+            if (mTimer != null) {
+                mTimer.cancel();
+                mTimer = null;
+            }
+
+            if (mTask != null) {
+                mTask.cancel();
+                mTask = null;
+            }
+
+            mIsTimerRunning = false;
+        }
+    }
+
+    private static void startMonitorTimer() {
+        if (mTimer == null) {
+            mTimer = new Timer();
+        }
+
+        if (mTask == null) {
+            mTask = new TimerTask() {
+                @Override
+                public void run() {
+                    Message message = new Message();
+                    message.what = MONITOR_CHECK;
+                    message.obj = System.currentTimeMillis();
+                    mTimerHandler.sendMessage(message);
+                }
+            };
+        }
+
+        if (mTimer != null) {
+            if (!mIsTimerRunning) {
+                mIsTimerRunning = true;
+                mTimer.schedule(mTask, 1000, 500);
+            }
+        }
+    }
+
+    private static boolean isScreenOn() {
+        PowerManager powerManager = (PowerManager)mContext.getSystemService(POWER_SERVICE);
+        return powerManager.isInteractive();
+    }
+
+    private static void startScreenBlocker() {
+        Intent intent = new Intent(mContext, ScreenBlockerActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
+    }
+
+    private void stopScreenBlocker() {
+        Intent intent = new Intent(ACTION_STOP_SCREEN_BLOCKER);
+        mLocalBroadcastManager.sendBroadcast(intent);
+    }
+}

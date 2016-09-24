@@ -1,0 +1,12 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header android:title="@string/pref_header_schedule" >
+        <intent android:targetPackage="com.sunny.leaveme"
+            android:targetClass="com.sunny.leaveme.activities.ScheduleActivity" />
+    </header>
+
+    <header
+        android:fragment="com.sunny.leaveme.activities.SettingsActivity$FunctionPreferenceFragment"
+        android:title="@string/pref_header_function" />
+
+</preference-headers>
