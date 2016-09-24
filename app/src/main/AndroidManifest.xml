@@ -13,6 +13,7 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -43,15 +44,16 @@
         <service
             android:name=".services.ManagerService"
             android:enabled="true"
-            android:exported="false" >
-        </service>
+            android:exported="false"></service>
+
         <receiver android:name=".services.ManagerService$receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".AlarmHelper$AlarmBroadcastReceiver">
-        </receiver>
+        <receiver android:name=".AlarmHelper$AlarmBroadcastReceiver"></receiver>
+
+        <activity android:name=".activities.WhitelistActivity"></activity>
     </application>
 
 </manifest>

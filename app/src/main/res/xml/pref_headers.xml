@@ -9,4 +9,9 @@
         android:fragment="com.sunny.leaveme.activities.SettingsActivity$FunctionPreferenceFragment"
         android:title="@string/pref_header_function" />
 
+    <header android:title="@string/pref_header_whitelist" >
+        <intent android:targetPackage="com.sunny.leaveme"
+            android:targetClass="com.sunny.leaveme.activities.WhitelistActivity" />
+    </header>
+
 </preference-headers>

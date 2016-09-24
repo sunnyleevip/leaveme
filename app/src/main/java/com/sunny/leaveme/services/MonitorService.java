@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.os.Handler;
@@ -111,7 +110,6 @@ public class MonitorService extends Service {
     public void onCreate() {
         mContext = this;
         registerScreenLockReceiver();
-        updateUninstalledPackages();
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ACTION_START_MONITOR);
@@ -233,14 +231,6 @@ public class MonitorService extends Service {
                 Log.d(TAG, "Package changed");
                 //updateUninstalledPackages();
             }
-        }
-    }
-
-    private void updateUninstalledPackages() {
-        List<PackageInfo> packages = getPackageManager().getInstalledPackages(0);
-        for (int i = 0; i < packages.size(); ++i) {
-            PackageInfo packageInfo = packages.get(i);
-            //Log.d(TAG, "packageInfo.packageName == " + packageInfo.packageName);
         }
     }
 
