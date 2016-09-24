@@ -109,14 +109,14 @@ public class DataHelper {
     }
 
     public int insertScheduleItem(ScheduleItem scheduleItem) {
-        long id = mDb.insert(ScheduleItem.TABLE_NAME, null, createContentValusForScheduleItem(scheduleItem));
+        long id = mDb.insert(ScheduleItem.TABLE_NAME, null, createContentValuesForScheduleItem(scheduleItem));
         Log.d(TAG, "insert to db id: " + id);
         return (int)id;
     }
 
     public void updateScheduleItem(ScheduleItem scheduleItem) {
         Log.d(TAG, "update to db id: " + scheduleItem.getId());
-        mDb.update(ScheduleItem.TABLE_NAME, createContentValusForScheduleItem(scheduleItem)
+        mDb.update(ScheduleItem.TABLE_NAME, createContentValuesForScheduleItem(scheduleItem)
                 , ScheduleItem.ID + "=?" , new String[]{"" + scheduleItem.getId()});
     }
 
@@ -126,7 +126,7 @@ public class DataHelper {
                 ScheduleItem.ID + "=?", new String[]{"" + scheduleItem.getId()});
     }
 
-    private ContentValues createContentValusForScheduleItem(ScheduleItem scheduleItem) {
+    private ContentValues createContentValuesForScheduleItem(ScheduleItem scheduleItem) {
         int iStartTime = scheduleItem.getStartTime().getHour() * 100
                 + scheduleItem.getStartTime().getMinute();
         int iEndTime = scheduleItem.getEndTime().getHour() * 100
@@ -139,7 +139,7 @@ public class DataHelper {
             }
         }
 
-        Log.d(TAG, "createContentValusForScheduleItem iRepeatDays:" + iRepeatDays);
+        Log.d(TAG, "createContentValuesForScheduleItem iRepeatDays:" + iRepeatDays);
 
         ContentValues cv = new ContentValues();
         cv.put(ScheduleItem.STARTTIME, iStartTime);

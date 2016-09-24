@@ -35,7 +35,7 @@ public class ScheduleActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_CREATE = 101;
     private final static int REQUEST_CODE_MODIFY = 102;
 
-    private static Context mContext = null;
+    private Context mContext = null;
     private LocalBroadcastManager mLocalBroadcastManager;
 
     private ScheduleListAdapter mAdapter;
