@@ -21,6 +21,7 @@ import com.sunny.leaveme.SensorReader;
 import com.sunny.leaveme.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Timer;
@@ -44,14 +45,27 @@ public class MonitorService extends Service {
     private LocalBroadcastManager mLocalBroadcastManager;
 
     private static boolean mIsTimerRunning = false;
-    private final static TimerHandler mTimerHandler = new TimerHandler();
+    private final TimerHandler mTimerHandler = new TimerHandler(this);
 
     private static class TimerHandler extends Handler {
+        private final WeakReference<MonitorService> mService;
+
+        private TimerHandler(MonitorService service) {
+            mService = new WeakReference<>(service);
+        }
+
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MONITOR_CHECK:
-                    if (!isScreenOn()) {
+                    MonitorService monitorService = mService.get();
+                    if (monitorService == null) {
+                        Log.e(TAG, "handleMessage|monitorService is null");
+                        break;
+                    }
+
+                    if (monitorService.isScreenOn()) {
+                        Log.e(TAG, "screen off");
                         break;
                     }
 
@@ -62,7 +76,7 @@ public class MonitorService extends Service {
                         field = ActivityManager.RunningAppProcessInfo.class.getDeclaredField("processState");
                     } catch (Exception ignored) {
                     }
-                    ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                    ActivityManager am = (ActivityManager) monitorService.getContext().getSystemService(Context.ACTIVITY_SERVICE);
                     List<ActivityManager.RunningAppProcessInfo> appList = am.getRunningAppProcesses();
                     for (ActivityManager.RunningAppProcessInfo app : appList) {
                         if (app.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
@@ -87,11 +101,11 @@ public class MonitorService extends Service {
                         Log.d(TAG, "packageName: " + currentInfo.processName);
                         if (!currentInfo.processName.equals("com.sunny.leaveme")) {
                             Log.d(TAG, "running something else");
-                            startScreenBlocker();
+                            monitorService.startScreenBlocker();
                         }
                     } else {
                         Log.d(TAG, "running something else");
-                        startScreenBlocker();
+                        monitorService.startScreenBlocker();
                     }
 
                     break;
@@ -101,7 +115,7 @@ public class MonitorService extends Service {
 
     private static TimerTask mTask = null;
     private static Timer mTimer = null;
-    private static Context mContext = null;
+    private Context mContext = null;
     private LockScreenReceiver mLockScreenReceiver;
 
     private SensorReader mSensorReader = null;
@@ -138,6 +152,10 @@ public class MonitorService extends Service {
         stopScreenBlocker();
     }
 
+    private Context getContext() {
+        return mContext;
+    }
+
     private BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -170,7 +188,6 @@ public class MonitorService extends Service {
             if (event.values[0] < SENSOR_THRESHOLD_LIGHT_LOW) {
                 mReason = MONITOR_REASON_LIGHT;
                 startMonitorTimer();
-                startScreenBlocker();
             } else {
                 mReason = MONITOR_REASON_NONE;
                 stopMonitorTimer();
@@ -234,7 +251,7 @@ public class MonitorService extends Service {
         }
     }
 
-    private static void stopMonitorTimer() {
+    private void stopMonitorTimer() {
         if (mIsTimerRunning) {
             if (mTimer != null) {
                 mTimer.cancel();
@@ -250,7 +267,7 @@ public class MonitorService extends Service {
         }
     }
 
-    private static void startMonitorTimer() {
+    private void startMonitorTimer() {
         if (mTimer == null) {
             mTimer = new Timer();
         }
@@ -275,12 +292,23 @@ public class MonitorService extends Service {
         }
     }
 
-    private static boolean isScreenOn() {
+    private boolean isScreenOn() {
+        if (mContext == null) {
+            Log.e(TAG, "isScreenOn, mContext is null");
+            return false;
+        }
+
         PowerManager powerManager = (PowerManager)mContext.getSystemService(POWER_SERVICE);
+
+        if (powerManager == null) {
+            Log.e(TAG, "Cannot access PowerManager");
+            return false;
+        }
+
         return powerManager.isInteractive();
     }
 
-    private static void startScreenBlocker() {
+    private void startScreenBlocker() {
         Intent intent = new Intent(mContext, ScreenBlockerActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(intent);
