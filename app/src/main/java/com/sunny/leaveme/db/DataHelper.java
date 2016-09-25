@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.sunny.leaveme.db.entity.ScheduleItem;
+import com.sunny.leaveme.db.entity.WhitelistItem;
 
 import java.util.ArrayList;
 
@@ -148,5 +149,25 @@ public class DataHelper {
         cv.put(ScheduleItem.ISAVAILABLE, scheduleItem.isAvailable());
 
         return cv;
+    }
+
+    public ArrayList<WhitelistItem> getAllWhitelistItems() {
+        ArrayList<WhitelistItem> whitelistItems = new ArrayList<>();
+        Cursor c = mDb.query(ScheduleItem.TABLE_NAME, null, null, null, null, null, null);
+        while (c.moveToNext()) {
+            WhitelistItem whitelistItem = getWhitelistItemFromCursor(c);
+            whitelistItems.add(whitelistItem);
+        }
+        c.close();
+
+        return whitelistItems;
+    }
+
+    private WhitelistItem getWhitelistItemFromCursor(Cursor c) {
+        WhitelistItem whitelistItem = new WhitelistItem();
+        whitelistItem.setId(c.getInt(c.getColumnIndex(WhitelistItem.ID)));
+        whitelistItem.setAppName(c.getString(c.getColumnIndex(WhitelistItem.APPNAME)));
+        whitelistItem.setAvailable(c.getInt(c.getColumnIndex(WhitelistItem.ISAVAILABLE)) == 1);
+        return whitelistItem;
     }
 }

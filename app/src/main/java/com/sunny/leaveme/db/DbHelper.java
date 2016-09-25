@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.sunny.leaveme.db.entity.ScheduleItem;
+import com.sunny.leaveme.db.entity.WhitelistItem;
 
 /**
  * Created by Administrator on 2016/9/11.
@@ -21,6 +22,7 @@ public class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(ScheduleItem.CREATE);
+        db.execSQL(WhitelistItem.CREATE);
     }
 
     @Override
