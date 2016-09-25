@@ -16,15 +16,13 @@ import java.util.Map;
 public class SensorReader {
     private final static String TAG = "SensorReader";
 
-    private Context mContext;
     private android.hardware.SensorManager mSensorManager;
     private boolean isRegistered = false;
     private Sensor mLightSensor;
     private Map<Integer, SensorChangedListener> mListeners;
 
     public SensorReader(Context context) {
-        mContext = context;
-        mSensorManager = (android.hardware.SensorManager)mContext.getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (android.hardware.SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
         mLightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         if (mLightSensor == null) {
             Log.e(TAG, "Not support sensor: Sensor.TYPE_LIGHT");

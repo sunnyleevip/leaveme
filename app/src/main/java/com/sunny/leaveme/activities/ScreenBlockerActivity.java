@@ -17,12 +17,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
+import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.R;
 
 
 public class ScreenBlockerActivity extends AppCompatActivity {
     private final static String TAG = "ScreenBlockerActivity";
-    private final static String ACTION_STOP_SCREEN_BLOCKER = "com.sunny.leaveme.ACTION_STOP_SCREEN_BLOCKER";
     private Context mContext = null;
     private LocalBroadcastManager mLocalBroadcastManager;
 
@@ -34,7 +34,8 @@ public class ScreenBlockerActivity extends AppCompatActivity {
         initView();
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
-        mLocalBroadcastManager.registerReceiver(mStopBroadcastReceiver, new IntentFilter(ACTION_STOP_SCREEN_BLOCKER));
+        mLocalBroadcastManager.registerReceiver(mStopBroadcastReceiver,
+                new IntentFilter(ActionStr.ACTION_STOP_SCREEN_BLOCKER));
     }
 
     @Override
@@ -47,7 +48,7 @@ public class ScreenBlockerActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "mStopBroadcastReceiver.onReceive");
-            if (intent.getAction().equals(ACTION_STOP_SCREEN_BLOCKER)) {
+            if (intent.getAction().equals(ActionStr.ACTION_STOP_SCREEN_BLOCKER)) {
                 ((Activity)mContext).finish();
             }
         }

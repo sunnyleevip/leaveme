@@ -13,7 +13,6 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -26,14 +25,6 @@
         <receiver android:name=".services.MonitorService$receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.PACKAGE_ADDED" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
-                <action android:name="android.intent.action.PACKAGE_CHANGED" />
-                <action android:name="android.intent.action.PACKAGE_DATA_CLEARED" />
-                <action android:name="android.intent.action.PACKAGE_RESTARTED" />
-                <action android:name="android.intent.action.ACTION_SCREEN_ON" />
-                <action android:name="android.intent.action.ACTION_SCREEN_OFF" />
             </intent-filter>
         </receiver>
 
@@ -44,16 +35,29 @@
         <service
             android:name=".services.ManagerService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <receiver android:name=".services.ManagerService$receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".AlarmHelper$AlarmBroadcastReceiver"></receiver>
+        <receiver android:name=".AlarmHelper$AlarmBroadcastReceiver" />
 
-        <activity android:name=".activities.WhitelistActivity"></activity>
+        <activity android:name=".activities.WhitelistActivity" />
+
+        <receiver
+            android:name=".receivers.PackageUpdatedReceiver">
+            <intent-filter>
+                <action android:name="com.sunny.leaveme.ACTION_CHECK_PACKAGE_UPDATE" />
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_CHANGED" />
+                <action android:name="android.intent.action.PACKAGE_DATA_CLEARED" />
+                <action android:name="android.intent.action.PACKAGE_RESTARTED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

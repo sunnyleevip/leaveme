@@ -16,6 +16,7 @@ import android.preference.SwitchPreference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.services.ManagerService;
 import com.sunny.leaveme.services.MonitorService;
@@ -29,7 +30,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Log.d(TAG, "onPreferenceChange");
             if (mLightDetectingSwitch == preference) {
                 Log.d(TAG, "Light switch changed: " + value);
-                Intent intent = new Intent(ACTION_UPDATE_LIGHT_SWITCH_VALUE);
+                Intent intent = new Intent(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
                 intent.putExtra("light_switch", (Boolean)value);
                 mLocalBroadcastManager.sendBroadcast(intent);
                 return true;
@@ -50,7 +51,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     private Context mContext;
     private final static String TAG = "SettingsActivity";
-    private final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
     private static LocalBroadcastManager mLocalBroadcastManager;
     private static SwitchPreference mLightDetectingSwitch;
 

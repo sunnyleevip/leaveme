@@ -3,9 +3,11 @@ package com.sunny.leaveme.db.entity;
 import android.util.Log;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 /**
- * Created by sunnyl on 2016/9/7.
+ * Created by Sunny Li on 2016/9/7.
+ * ScheduleTime records Hour and Minute only
  */
 public class ScheduleTime implements Serializable {
     private final static String TAG = "ScheduleTime";
@@ -53,7 +55,8 @@ public class ScheduleTime implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%02d", mHour) + ":" + String.format("%02d", mMinute);
+        return String.format(Locale.getDefault(), "%02d", mHour) + ":" +
+                String.format(Locale.getDefault(), "%02d", mMinute);
     }
 
     public boolean isEqualOrAfter(ScheduleTime scheduleTime) {

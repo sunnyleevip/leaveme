@@ -21,6 +21,7 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 
+import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.activities.uihelper.ScheduleListAdapter;
 import com.sunny.leaveme.db.DataHelper;
 import com.sunny.leaveme.R;
@@ -31,7 +32,6 @@ import java.util.ArrayList;
 
 public class ScheduleActivity extends AppCompatActivity {
     private final static String TAG = "ScheduleActivity";
-    private final static String ACTION_UPDATE_VIEW = "com.sunny.leaveme.ACTION_UPDATE_VIEW";
     private final static int REQUEST_CODE_CREATE = 101;
     private final static int REQUEST_CODE_MODIFY = 102;
 
@@ -94,7 +94,8 @@ public class ScheduleActivity extends AppCompatActivity {
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
-        mLocalBroadcastManager.registerReceiver(mViewUpdateBroadcastReceiver, new IntentFilter(ACTION_UPDATE_VIEW));
+        mLocalBroadcastManager.registerReceiver(mViewUpdateBroadcastReceiver,
+                new IntentFilter(ActionStr.ACTION_UPDATE_VIEW));
     }
 
     @Override
@@ -109,7 +110,7 @@ public class ScheduleActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "mViewUpdateBroadcastReceiver.onReceive");
-            if (intent.getAction().equals(ACTION_UPDATE_VIEW)) {
+            if (intent.getAction().equals(ActionStr.ACTION_UPDATE_VIEW)) {
                 int id = intent.getIntExtra("id", -1);
                 if (id >= 0) {
                     Log.d(TAG, "Update view id: " + id);
@@ -213,7 +214,6 @@ public class ScheduleActivity extends AppCompatActivity {
         startActivityForResult(intent, REQUEST_CODE_MODIFY);
     }
 
-    //private static final String ACTION_UPDATE_ALARM = "com.sunny.leaveme.UPDATE_ALARM";
     private ManagerService mManagerService;
     private void addAlarm(ScheduleItem scheduleItem) {
         if (mManagerService != null) {

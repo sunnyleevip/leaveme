@@ -17,9 +17,11 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.SensorReader;
 import com.sunny.leaveme.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
+import com.sunny.leaveme.receivers.PackageUpdatedReceiver;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -29,10 +31,6 @@ import java.util.TimerTask;
 
 public class MonitorService extends Service {
     private static final String TAG = "MonitorService";
-    private final static String ACTION_STOP_SCREEN_BLOCKER = "com.sunny.leaveme.ACTION_STOP_SCREEN_BLOCKER";
-    private final static String ACTION_START_MONITOR = "com.sunny.leaveme.ACTION_START_MONITOR";
-    private final static String ACTION_STOP_MONITOR = "com.sunny.leaveme.ACTION_STOP_MONITOR";
-    private final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
     private final static int MONITOR_CHECK = 101;
     private final static float SENSOR_THRESHOLD_LIGHT_LOW = 1.0f;
     private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
@@ -126,9 +124,9 @@ public class MonitorService extends Service {
         registerScreenLockReceiver();
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_START_MONITOR);
-        intentFilter.addAction(ACTION_STOP_MONITOR);
-        intentFilter.addAction(ACTION_UPDATE_LIGHT_SWITCH_VALUE);
+        intentFilter.addAction(ActionStr.ACTION_START_MONITOR);
+        intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR);
+        intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
         mSensorReader = new SensorReader(this);
         if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
@@ -160,15 +158,15 @@ public class MonitorService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "mLocalBroadcastReceiver.onReceive");
-            if (intent.getAction().equals(ACTION_START_MONITOR)) {
+            if (intent.getAction().equals(ActionStr.ACTION_START_MONITOR)) {
                 mReason = MONITOR_REASON_ALARM;
                 startMonitorTimer();
                 mSensorReader.start();
-            } else if (intent.getAction().equals(ACTION_STOP_MONITOR)) {
+            } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR)) {
                 mReason = MONITOR_REASON_NONE;
                 stopMonitorTimer();
                 mSensorReader.stop();
-            } else if (intent.getAction().equals(ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
+            } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("light_switch", true);
                 if (isChecked) {
                     mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
@@ -238,16 +236,6 @@ public class MonitorService extends Service {
                 Intent i= new Intent(context, MonitorService.class);
                 context.startService(i);
             }
-
-            if ((intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED))
-                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_REMOVED))
-                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_REPLACED))
-                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_CHANGED))
-                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_DATA_CLEARED))
-                    || (intent.getAction().equals(Intent.ACTION_PACKAGE_RESTARTED))) {
-                Log.d(TAG, "Package changed");
-                //updateUninstalledPackages();
-            }
         }
     }
 
@@ -315,7 +303,13 @@ public class MonitorService extends Service {
     }
 
     private void stopScreenBlocker() {
-        Intent intent = new Intent(ACTION_STOP_SCREEN_BLOCKER);
+        Intent intent = new Intent(ActionStr.ACTION_STOP_SCREEN_BLOCKER);
         mLocalBroadcastManager.sendBroadcast(intent);
+    }
+
+    private void updatePackageInfo() {
+        Intent intent = new Intent(mContext, PackageUpdatedReceiver.class);
+        intent.setAction(ActionStr.ACTION_CHECK_PACKAGE_UPDATE);
+        mContext.sendBroadcast(intent);
     }
 }

@@ -6,7 +6,7 @@ package com.sunny.leaveme.db.entity;
  */
 
 public class WhitelistItem {
-    private final static String TAG = "WhitelistItem";
+    //private final static String TAG = "WhitelistItem";
 
     public final static String TABLE_NAME = "whitelist";
     public final static String ID = "ID";
