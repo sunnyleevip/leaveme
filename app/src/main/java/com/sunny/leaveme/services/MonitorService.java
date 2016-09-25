@@ -64,7 +64,7 @@ public class MonitorService extends Service {
                         break;
                     }
 
-                    if (monitorService.isScreenOn()) {
+                    if (!monitorService.isScreenOn()) {
                         Log.e(TAG, "screen off");
                         break;
                     }
