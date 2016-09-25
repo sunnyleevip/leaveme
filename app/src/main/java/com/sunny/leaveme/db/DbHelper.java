@@ -8,7 +8,7 @@ import com.sunny.leaveme.db.entity.ScheduleItem;
 import com.sunny.leaveme.db.entity.WhitelistItem;
 
 /**
- * Created by Administrator on 2016/9/11.
+ * Created by Sunny Li on 2016/9/11.
  * DbHelper for get database from system.
  */
 public class DbHelper extends SQLiteOpenHelper {

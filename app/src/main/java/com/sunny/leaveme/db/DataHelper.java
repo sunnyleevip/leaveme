@@ -153,7 +153,7 @@ public class DataHelper {
 
     public ArrayList<WhitelistItem> getAllWhitelistItems() {
         ArrayList<WhitelistItem> whitelistItems = new ArrayList<>();
-        Cursor c = mDb.query(ScheduleItem.TABLE_NAME, null, null, null, null, null, null);
+        Cursor c = mDb.query(WhitelistItem.TABLE_NAME, null, null, null, null, null, null);
         while (c.moveToNext()) {
             WhitelistItem whitelistItem = getWhitelistItemFromCursor(c);
             whitelistItems.add(whitelistItem);
@@ -169,5 +169,41 @@ public class DataHelper {
         whitelistItem.setAppName(c.getString(c.getColumnIndex(WhitelistItem.APPNAME)));
         whitelistItem.setAvailable(c.getInt(c.getColumnIndex(WhitelistItem.ISAVAILABLE)) == 1);
         return whitelistItem;
+    }
+
+    public void insertWhitelistItems(ArrayList<WhitelistItem> whitelistItems) {
+        mDb.beginTransaction();
+        for (int i = 0; i < whitelistItems.size(); ++i) {
+            int iIsAvailable = 0;
+            if (whitelistItems.get(i).isAvailable()) {
+                iIsAvailable = 1;
+            }
+            String sql = "insert into " + WhitelistItem.TABLE_NAME +
+                    "(" + WhitelistItem.APPNAME + "," + WhitelistItem.ISAVAILABLE + ")" +
+                    " values" +
+                    "('" + whitelistItems.get(i).getAppName() + "'," + iIsAvailable + ")";
+            mDb.execSQL(sql);
+        }
+        mDb.setTransactionSuccessful();
+        mDb.endTransaction();
+    }
+
+    public int insertWhitelistItem(WhitelistItem whitelistItem) {
+        long id = mDb.insert(WhitelistItem.TABLE_NAME, null, createContentValuesForWhitelistItem(whitelistItem));
+        Log.d(TAG, "insert WhitelistItem to db id: " + id);
+        return (int)id;
+    }
+
+    public void updateWhitelistItem(WhitelistItem whitelistItem) {
+        Log.d(TAG, "update to db id: " + whitelistItem.getId());
+        mDb.update(WhitelistItem.TABLE_NAME, createContentValuesForWhitelistItem(whitelistItem)
+                , WhitelistItem.ID + "=?" , new String[]{"" + whitelistItem.getId()});
+    }
+
+    private ContentValues createContentValuesForWhitelistItem(WhitelistItem whitelistItem) {
+        ContentValues cv = new ContentValues();
+        cv.put(WhitelistItem.APPNAME, whitelistItem.getAppName());
+        cv.put(WhitelistItem.ISAVAILABLE, whitelistItem.isAvailable());
+        return cv;
     }
 }

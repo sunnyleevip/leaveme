@@ -58,9 +58,6 @@ public class ScheduleActivity extends AppCompatActivity {
 
         mDataHelper = new DataHelper(this);
         mScheduleItems = mDataHelper.getAllScheduleItems();
-        for (int i = 0; i < mScheduleItems.size(); ++i) {
-            Log.d(TAG, "pos: " + i + " id: " + mScheduleItems.get(i).getId() + " available:" + mScheduleItems.get(i).isAvailable());
-        }
 
         ListView listView = (ListView) findViewById(R.id.lvTimeList);
         mAdapter = new ScheduleListAdapter(this,

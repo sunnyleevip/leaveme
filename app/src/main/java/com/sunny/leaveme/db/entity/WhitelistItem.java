@@ -13,7 +13,7 @@ public class WhitelistItem {
     public final static String APPNAME = "APPNAME";
     public final static String ISAVAILABLE = "ISAVAILABLE";
 
-    public final static String CREATE = "create table schedule(" +
+    public final static String CREATE = "create table whitelist(" +
             "ID             INTEGER     PRIMARY KEY     AUTOINCREMENT," +
             "APPNAME        TEXT                        NOT NULL," +
             "ISAVAILABLE    INTEGER                     NOT NULL);";

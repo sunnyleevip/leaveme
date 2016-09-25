@@ -12,21 +12,21 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.sunny.leaveme.R;
-import com.sunny.leaveme.db.entity.ScheduleItem;
+import com.sunny.leaveme.db.entity.WhitelistItem;
 
 import java.util.ArrayList;
 
 /**
- * Created by Sunny Li on 2016/9/11.
- * ScheduleListAdapter for customize list view in Schedule Activity
+ * Created by Sunny Li on 2016/9/25.
+ * WhitelistListAdapter for customize list view in Whitelist Activity
  */
-public class ScheduleListAdapter extends ArrayAdapter<ScheduleItem> {
+public class WhitelistListAdapter extends ArrayAdapter<WhitelistItem> {
     private Context context;
     private int layoutResourceId;
-    private ArrayList<ScheduleItem> data;
+    private ArrayList<WhitelistItem> data;
     private OnCheckedChangeListener mSwitchOnCheckedChangeListener;
 
-    public ScheduleListAdapter(Context context, int layoutResourceId, ArrayList<ScheduleItem> data
+    public WhitelistListAdapter(Context context, int layoutResourceId, ArrayList<WhitelistItem> data
             , OnCheckedChangeListener onCheckedChangeListener) {
         super(context, layoutResourceId, data);
         this.layoutResourceId = layoutResourceId;
@@ -38,37 +38,34 @@ public class ScheduleListAdapter extends ArrayAdapter<ScheduleItem> {
     @Override
     @NonNull
     public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-        ScheduleItemHolder holder;
+        WhitelistItemHolder holder;
 
         if(convertView == null) {
             LayoutInflater inflater = ((Activity)context).getLayoutInflater();
             convertView = inflater.inflate(layoutResourceId, parent, false);
 
-            holder = new ScheduleItemHolder();
-            holder.tvTitle = (TextView)convertView.findViewById(R.id.schedule_item_main);
-            holder.tvSubtitle = (TextView)convertView.findViewById(R.id.schedule_item_sub);
-            holder.swAvailable = (Switch)convertView.findViewById(R.id.schedule_item_switch_available);
+            holder = new WhitelistItemHolder();
+            holder.tvTitle = (TextView)convertView.findViewById(R.id.whitelist_item_main);
+            holder.swAvailable = (Switch)convertView.findViewById(R.id.whitelist_item_switch_available);
             holder.swAvailable.setEnabled(true);
             holder.swAvailable.setTag(position);
             holder.swAvailable.setOnCheckedChangeListener(mSwitchOnCheckedChangeListener);
             convertView.setTag(holder);
         } else {
-            holder = (ScheduleItemHolder)convertView.getTag();
+            holder = (WhitelistItemHolder)convertView.getTag();
             holder.swAvailable.setTag(position);
         }
 
-        ScheduleItem scheduleItem = data.get(position);
-        holder.swAvailable.setChecked(scheduleItem.isAvailable());
-        holder.tvTitle.setText("From " + scheduleItem.getStartTime().toString()
-                + " to " + scheduleItem.getEndTime().toString());
-        holder.tvSubtitle.setText(scheduleItem.getRepeatDaysString());
+        WhitelistItem whitelistItem = data.get(position);
+        holder.swAvailable.setChecked(whitelistItem.isAvailable());
+        String[] splittedNames = whitelistItem.getAppName().split("\\.");
+        holder.tvTitle.setText(splittedNames[splittedNames.length - 1]);
 
         return convertView;
     }
 
-    private static class ScheduleItemHolder {
+    private static class WhitelistItemHolder {
         TextView tvTitle;
-        TextView tvSubtitle;
         Switch swAvailable;
     }
 }
