@@ -4,6 +4,7 @@ package com.sunny.leaveme.activities;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -20,6 +21,7 @@ import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.services.ManagerService;
 import com.sunny.leaveme.services.MonitorService;
+import com.sunny.leaveme.services.PackageUpdateService;
 
 import java.util.List;
 
@@ -67,6 +69,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         mContext.startService(i);
 
         i= new Intent(mContext, MonitorService.class);
+        mContext.startService(i);
+
+        i= new Intent(mContext, PackageUpdateService.class);
         mContext.startService(i);
     }
 

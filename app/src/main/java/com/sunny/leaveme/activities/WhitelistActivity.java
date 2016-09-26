@@ -56,6 +56,7 @@ public class WhitelistActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         mDataHelper.close();
     }
 }

@@ -21,7 +21,6 @@ import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.SensorReader;
 import com.sunny.leaveme.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
-import com.sunny.leaveme.receivers.PackageUpdatedReceiver;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -128,6 +127,7 @@ public class MonitorService extends Service {
         intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
+
         mSensorReader = new SensorReader(this);
         if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
             // support light sensor
@@ -142,6 +142,7 @@ public class MonitorService extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         Log.d(TAG, "MonitorService onDestroy");
         mSensorReader.stop();
         mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
@@ -305,11 +306,5 @@ public class MonitorService extends Service {
     private void stopScreenBlocker() {
         Intent intent = new Intent(ActionStr.ACTION_STOP_SCREEN_BLOCKER);
         mLocalBroadcastManager.sendBroadcast(intent);
-    }
-
-    private void updatePackageInfo() {
-        Intent intent = new Intent(mContext, PackageUpdatedReceiver.class);
-        intent.setAction(ActionStr.ACTION_CHECK_PACKAGE_UPDATE);
-        mContext.sendBroadcast(intent);
     }
 }
