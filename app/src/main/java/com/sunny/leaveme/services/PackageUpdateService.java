@@ -53,9 +53,8 @@ public class PackageUpdateService extends Service implements Runnable {
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
-        //Thread thread = new Thread(this);
-        //thread.start();
-        updateUninstalledPackages();
+        Thread thread = new Thread(this);
+        thread.start();
     }
 
     @Override
@@ -91,6 +90,9 @@ public class PackageUpdateService extends Service implements Runnable {
                     || (intent.getAction().equals(Intent.ACTION_PACKAGE_DATA_CLEARED))
                     || (intent.getAction().equals(Intent.ACTION_PACKAGE_RESTARTED))) {
                 Log.d(TAG, "Package changed");
+
+                Thread thread = new Thread((PackageUpdateService)mContext);
+                thread.start();
             }
         }
     }
@@ -100,7 +102,8 @@ public class PackageUpdateService extends Service implements Runnable {
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "mLocalBroadcastReceiver.onReceive");
             if (intent.getAction().equals(ActionStr.ACTION_CHECK_PACKAGE_UPDATE)) {
-                updateUninstalledPackages();
+                Thread thread = new Thread((PackageUpdateService)mContext);
+                thread.start();
             }
         }
     };
