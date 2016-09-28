@@ -2,15 +2,11 @@ package com.sunny.leaveme.services;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -121,28 +117,30 @@ public class PackageUpdateService extends Service implements Runnable {
         ArrayList<WhitelistItem> newWhitelistItems = new ArrayList<>();
 
         for (ResolveInfo resolveInfo : resolveInfos) {
-            String activityName = resolveInfo.activityInfo.name;
-            String pkgName = resolveInfo.activityInfo.packageName;
-            String appLabel = (String) resolveInfo.loadLabel(pm);
-            Drawable icon = resolveInfo.loadIcon(pm);
-            Intent launchIntent = new Intent();
-            launchIntent.setComponent(new ComponentName(pkgName,
-                    activityName));
-            Log.d(TAG, appLabel + " activityName---" + activityName
-                    + " pkgName---" + pkgName);
-
             boolean isExist = false;
             for (WhitelistItem whitelistItem : whitelistItems) {
-                if (whitelistItem.getAppName().equals(pkgName)) {
+                if (whitelistItem.getAppName().equals(resolveInfo.activityInfo.packageName)) {
                     isExist = true;
                     break;
                 }
             }
 
             if (!isExist) {
+                Log.d(TAG, resolveInfo.loadLabel(pm) +
+                        " activityName: " + resolveInfo.activityInfo.name +
+                        " pkgName:" + resolveInfo.activityInfo.packageName +
+                        " res id:" + resolveInfo.getIconResource());
+
                 WhitelistItem whitelistItem = new WhitelistItem();
-                whitelistItem.setAppName(pkgName);
+                whitelistItem.setAppLabel((String) resolveInfo.loadLabel(pm));
+                whitelistItem.setAppName(resolveInfo.activityInfo.packageName);
+                whitelistItem.setAppActivity(resolveInfo.activityInfo.name);
+                //whitelistItem.setIconRes(resolveInfo.getIconResource());
                 newWhitelistItems.add(whitelistItem);
+
+                /*Intent launchIntent = new Intent();
+                launchIntent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName,
+                    resolveInfo.activityInfo.name));*/
             }
         }
 

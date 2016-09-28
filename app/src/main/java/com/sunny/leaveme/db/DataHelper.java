@@ -18,10 +18,12 @@ import java.util.ArrayList;
 public class DataHelper {
     private static final String TAG = "DataHelper";
 
+    private Context mContext;
     private DbHelper mDbHelper;
     private SQLiteDatabase mDb = null;
 
     public DataHelper(Context context) {
+        mContext = context;
         mDbHelper = new DbHelper(context);
         mDb = mDbHelper.getWritableDatabase();
     }
@@ -166,7 +168,9 @@ public class DataHelper {
     private WhitelistItem getWhitelistItemFromCursor(Cursor c) {
         WhitelistItem whitelistItem = new WhitelistItem();
         whitelistItem.setId(c.getInt(c.getColumnIndex(WhitelistItem.ID)));
+        whitelistItem.setAppLabel(c.getString(c.getColumnIndex(WhitelistItem.APPLABEL)));
         whitelistItem.setAppName(c.getString(c.getColumnIndex(WhitelistItem.APPNAME)));
+        whitelistItem.setAppActivity(c.getString(c.getColumnIndex(WhitelistItem.APPACTIVITY)));
         whitelistItem.setAvailable(c.getInt(c.getColumnIndex(WhitelistItem.ISAVAILABLE)) == 1);
         return whitelistItem;
     }
@@ -179,9 +183,13 @@ public class DataHelper {
                 iIsAvailable = 1;
             }
             String sql = "insert into " + WhitelistItem.TABLE_NAME +
-                    "(" + WhitelistItem.APPNAME + "," + WhitelistItem.ISAVAILABLE + ")" +
+                    "(" + WhitelistItem.APPLABEL + "," + WhitelistItem.APPNAME +
+                    "," + WhitelistItem.APPACTIVITY + "," + WhitelistItem.ISAVAILABLE + ")" +
                     " values" +
-                    "('" + whitelistItems.get(i).getAppName() + "'," + iIsAvailable + ")";
+                    "('" + whitelistItems.get(i).getAppLabel() + "','" +
+                    whitelistItems.get(i).getAppName() + "','" +
+                    whitelistItems.get(i).getAppActivity() + "'," +
+                    iIsAvailable + ")";
             mDb.execSQL(sql);
         }
         mDb.setTransactionSuccessful();
@@ -202,7 +210,9 @@ public class DataHelper {
 
     private ContentValues createContentValuesForWhitelistItem(WhitelistItem whitelistItem) {
         ContentValues cv = new ContentValues();
+        cv.put(WhitelistItem.APPLABEL, whitelistItem.getAppLabel());
         cv.put(WhitelistItem.APPNAME, whitelistItem.getAppName());
+        cv.put(WhitelistItem.APPACTIVITY, whitelistItem.getAppActivity());
         cv.put(WhitelistItem.ISAVAILABLE, whitelistItem.isAvailable());
         return cv;
     }

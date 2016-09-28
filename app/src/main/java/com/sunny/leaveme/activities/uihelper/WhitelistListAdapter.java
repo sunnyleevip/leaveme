@@ -2,6 +2,9 @@ package com.sunny.leaveme.activities.uihelper;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,8 +61,14 @@ public class WhitelistListAdapter extends ArrayAdapter<WhitelistItem> {
 
         WhitelistItem whitelistItem = data.get(position);
         holder.swAvailable.setChecked(whitelistItem.isAvailable());
-        String[] splittedNames = whitelistItem.getAppName().split("\\.");
-        holder.tvTitle.setText(splittedNames[splittedNames.length - 1]);
+        holder.tvTitle.setText(whitelistItem.getAppLabel());
+        PackageManager pm = context.getPackageManager();
+        try {
+            Drawable icon = pm.getApplicationIcon(whitelistItem.getAppName());
+            holder.tvTitle.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
+        } catch (NameNotFoundException ex) {
+            ex.printStackTrace();
+        }
 
         return convertView;
     }

@@ -6,26 +6,28 @@ package com.sunny.leaveme.db.entity;
  */
 
 public class WhitelistItem {
-    //private final static String TAG = "WhitelistItem";
-
     public final static String TABLE_NAME = "whitelist";
     public final static String ID = "ID";
+    public final static String APPLABEL = "APPLABEL";
     public final static String APPNAME = "APPNAME";
+    public final static String APPACTIVITY = "APPACTIVITY";
     public final static String ISAVAILABLE = "ISAVAILABLE";
 
     public final static String CREATE = "create table whitelist(" +
             "ID             INTEGER     PRIMARY KEY     AUTOINCREMENT," +
+            "APPLABEL       TEXT                        NOT NULL," +
             "APPNAME        TEXT                        NOT NULL," +
-            "ISAVAILABLE    INTEGER                     NOT NULL);";
+            "APPACTIVITY    TEXT                        NOT NULL," +
+            "ISAVAILABLE    INTEGER                     NOT NULL" +
+            ");";
 
     private int mId = -1;
+    private String mAppLabel = "";
     private String mAppName = "";
+    private String mAppActivity = "";
     private boolean mIsAvailable = false;
 
     public WhitelistItem() {
-        mId = -1;
-        mAppName = "";
-        mIsAvailable = false;
     }
 
     public int getId() {
@@ -36,12 +38,28 @@ public class WhitelistItem {
         this.mId = id;
     }
 
+    public String getAppLabel() {
+        return mAppLabel;
+    }
+
+    public void setAppLabel(String appLabel) {
+        mAppLabel = appLabel;
+    }
+
     public String getAppName() {
         return mAppName;
     }
 
     public void setAppName(String appName) {
         mAppName = appName;
+    }
+
+    public String getAppActivity() {
+        return mAppActivity;
+    }
+
+    public void setAppActivity(String appActivity) {
+        mAppActivity = appActivity;
     }
 
     public boolean isAvailable() {
