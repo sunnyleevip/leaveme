@@ -13,13 +13,9 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 
 import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.R;
-
 
 public class ScreenBlockerActivity extends AppCompatActivity {
     private final static String TAG = "ScreenBlockerActivity";
@@ -31,7 +27,6 @@ public class ScreenBlockerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_screen_blocker);
-        initView();
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         mLocalBroadcastManager.registerReceiver(mStopBroadcastReceiver,
@@ -76,27 +71,9 @@ public class ScreenBlockerActivity extends AppCompatActivity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             Log.d(TAG, "BACK");
+            finish();
         }
         return true;
-    }
-
-    private void initView() {
-        Button btExit = (Button) findViewById(R.id.exit_button);
-        btExit.setOnClickListener(new mClickListener());
-    }
-
-    class mClickListener implements OnClickListener {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.exit_button:
-                    Log.d(TAG, "Exit");
-                    finish();
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 
     private void startSettings() {

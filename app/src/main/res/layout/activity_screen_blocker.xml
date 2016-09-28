@@ -9,12 +9,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".activities.ScreenBlockerActivity"
     android:clickable="true">
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/bt_exit"
-        android:id="@+id/exit_button"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
 </RelativeLayout>
