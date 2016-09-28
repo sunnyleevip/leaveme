@@ -2,12 +2,15 @@ package com.sunny.leaveme.services;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -17,6 +20,7 @@ import com.sunny.leaveme.db.DataHelper;
 import com.sunny.leaveme.db.entity.WhitelistItem;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.content.pm.PackageManager.GET_ACTIVITIES;
@@ -49,8 +53,9 @@ public class PackageUpdateService extends Service implements Runnable {
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
-        Thread thread = new Thread(this);
-        thread.start();
+        //Thread thread = new Thread(this);
+        //thread.start();
+        updateUninstalledPackages();
     }
 
     @Override
@@ -103,37 +108,38 @@ public class PackageUpdateService extends Service implements Runnable {
     private void updateUninstalledPackages() {
         DataHelper dataHelper = new DataHelper(mContext);
         PackageManager pm = mContext.getPackageManager();
-        List<PackageInfo> packages = pm.getInstalledPackages(0);
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> resolveInfos = pm
+                .queryIntentActivities(mainIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        Collections.sort(resolveInfos,new ResolveInfo.DisplayNameComparator(pm));
+
         ArrayList<WhitelistItem> whitelistItems = dataHelper.getAllWhitelistItems();
         ArrayList<WhitelistItem> newWhitelistItems = new ArrayList<>();
-        for (int i = 0; i < packages.size(); ++i) {
-            PackageInfo packageInfo = packages.get(i);
-            ActivityInfo[] activities = null;
-            try {
-                synchronized(PackageUpdateService.class) {
-                    pm = mContext.getPackageManager();
-                    activities = pm.getPackageInfo(packageInfo.packageName, GET_ACTIVITIES).activities;
+
+        for (ResolveInfo resolveInfo : resolveInfos) {
+            String activityName = resolveInfo.activityInfo.name;
+            String pkgName = resolveInfo.activityInfo.packageName;
+            String appLabel = (String) resolveInfo.loadLabel(pm);
+            Drawable icon = resolveInfo.loadIcon(pm);
+            Intent launchIntent = new Intent();
+            launchIntent.setComponent(new ComponentName(pkgName,
+                    activityName));
+            Log.d(TAG, appLabel + " activityName---" + activityName
+                    + " pkgName---" + pkgName);
+
+            boolean isExist = false;
+            for (WhitelistItem whitelistItem : whitelistItems) {
+                if (whitelistItem.getAppName().equals(pkgName)) {
+                    isExist = true;
+                    break;
                 }
-            } catch (PackageManager.NameNotFoundException ex) {
-                Log.e(TAG, "Name not found: " + packageInfo.packageName);
-                ex.printStackTrace();
             }
 
-            if (activities != null) {
-                //Log.d(TAG, "packageInfo.packageName: " + packageInfo.packageName);
-                boolean isExist = false;
-                for (WhitelistItem whitelistItem : whitelistItems) {
-                    if (whitelistItem.getAppName().equals(packageInfo.packageName)) {
-                        isExist = true;
-                        break;
-                    }
-                }
-
-                if (!isExist) {
-                    WhitelistItem whitelistItem = new WhitelistItem();
-                    whitelistItem.setAppName(packageInfo.packageName);
-                    newWhitelistItems.add(whitelistItem);
-                }
+            if (!isExist) {
+                WhitelistItem whitelistItem = new WhitelistItem();
+                whitelistItem.setAppName(pkgName);
+                newWhitelistItems.add(whitelistItem);
             }
         }
 
