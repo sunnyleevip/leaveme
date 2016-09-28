@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static android.content.pm.PackageManager.GET_ACTIVITIES;
-
 public class PackageUpdateService extends Service implements Runnable {
     private static final String TAG = "PackageUpdateService";
     private Context mContext;
@@ -135,12 +133,7 @@ public class PackageUpdateService extends Service implements Runnable {
                 whitelistItem.setAppLabel((String) resolveInfo.loadLabel(pm));
                 whitelistItem.setAppName(resolveInfo.activityInfo.packageName);
                 whitelistItem.setAppActivity(resolveInfo.activityInfo.name);
-                //whitelistItem.setIconRes(resolveInfo.getIconResource());
                 newWhitelistItems.add(whitelistItem);
-
-                /*Intent launchIntent = new Intent();
-                launchIntent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName,
-                    resolveInfo.activityInfo.name));*/
             }
         }
 
