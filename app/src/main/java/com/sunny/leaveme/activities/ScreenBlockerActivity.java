@@ -53,6 +53,8 @@ public class ScreenBlockerActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.d(TAG, "onItemClick pos:" + position + " id:" + id);
 
+                stopScreenBlockerAndKeepReason();
+
                 Intent launchIntent = new Intent();
                 launchIntent.setComponent(new ComponentName(mWhitelistItems.get(position).getAppName(),
                         mWhitelistItems.get(position).getAppActivity()));
@@ -114,5 +116,10 @@ public class ScreenBlockerActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(intent);
         finish();
+    }
+
+    private void stopScreenBlockerAndKeepReason() {
+        Intent intent = new Intent(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON);
+        mLocalBroadcastManager.sendBroadcast(intent);
     }
 }

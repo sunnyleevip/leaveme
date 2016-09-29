@@ -73,6 +73,7 @@ public class MonitorService extends Service {
                         field = ActivityManager.RunningAppProcessInfo.class.getDeclaredField("processState");
                     } catch (Exception ignored) {
                     }
+
                     ActivityManager am = (ActivityManager) monitorService.getContext().getSystemService(Context.ACTIVITY_SERVICE);
                     List<ActivityManager.RunningAppProcessInfo> appList = am.getRunningAppProcesses();
                     for (ActivityManager.RunningAppProcessInfo app : appList) {
@@ -167,6 +168,9 @@ public class MonitorService extends Service {
                 mReason = MONITOR_REASON_NONE;
                 stopMonitorTimer();
                 mSensorReader.stop();
+            } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
+                stopMonitorTimer();
+                mSensorReader.stop();
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("light_switch", true);
                 if (isChecked) {
@@ -206,6 +210,7 @@ public class MonitorService extends Service {
         lockFilter.addAction(Intent.ACTION_SCREEN_ON);
         lockFilter.addAction(Intent.ACTION_SCREEN_OFF);
         lockFilter.addAction(Intent.ACTION_USER_PRESENT);
+        lockFilter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mLockScreenReceiver, lockFilter);
     }
 
@@ -221,9 +226,14 @@ public class MonitorService extends Service {
                     mSensorReader.stop();
                 } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
                     Log.d(TAG, "start timer");
-                    if (mReason != MONITOR_REASON_NONE) {
-                        startMonitorTimer();
-                        mSensorReader.start();
+                    tryStartScreenBlockerIfNeed();
+                } else if (intent.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
+                    String reason = intent.getStringExtra("reason");
+                    if (reason != null) {
+                        if (reason.equals("homekey")) {
+                            Log.d(TAG, "homekey");
+                            tryStartScreenBlockerIfNeed();
+                        }
                     }
                 }
             }
@@ -299,12 +309,18 @@ public class MonitorService extends Service {
 
     private void startScreenBlocker() {
         Intent intent = new Intent(mContext, ScreenBlockerActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(intent);
     }
 
     private void stopScreenBlocker() {
         Intent intent = new Intent(ActionStr.ACTION_STOP_SCREEN_BLOCKER);
         mLocalBroadcastManager.sendBroadcast(intent);
+    }
+
+    private void tryStartScreenBlockerIfNeed() {
+        if (mReason != MONITOR_REASON_NONE) {
+            startMonitorTimer();
+            mSensorReader.start();
+        }
     }
 }
