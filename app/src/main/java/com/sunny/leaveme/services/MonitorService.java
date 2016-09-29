@@ -126,6 +126,7 @@ public class MonitorService extends Service {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ActionStr.ACTION_START_MONITOR);
         intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR);
+        intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
@@ -171,6 +172,7 @@ public class MonitorService extends Service {
             } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
                 stopMonitorTimer();
                 mSensorReader.stop();
+                stopScreenBlocker();
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("light_switch", true);
                 if (isChecked) {
@@ -315,6 +317,7 @@ public class MonitorService extends Service {
 
     private void startScreenBlocker() {
         Intent intent = new Intent(mContext, ScreenBlockerActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(intent);
     }
 
