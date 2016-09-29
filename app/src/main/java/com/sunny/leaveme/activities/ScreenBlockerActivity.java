@@ -2,6 +2,7 @@ package com.sunny.leaveme.activities;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,20 +14,51 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
 import com.sunny.leaveme.ActionStr;
 import com.sunny.leaveme.R;
+import com.sunny.leaveme.activities.uihelper.WhitelistListedAdapter;
+import com.sunny.leaveme.db.DataHelper;
+import com.sunny.leaveme.db.entity.WhitelistItem;
+
+import java.util.ArrayList;
 
 public class ScreenBlockerActivity extends AppCompatActivity {
     private final static String TAG = "ScreenBlockerActivity";
     private Context mContext = null;
     private LocalBroadcastManager mLocalBroadcastManager;
 
+    private DataHelper mDataHelper;
+    ArrayList<WhitelistItem> mWhitelistItems;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_screen_blocker);
+
+        mDataHelper = new DataHelper(this);
+        mWhitelistItems = mDataHelper.getAvailableWhitelistItems();
+
+        ListView listView = (ListView) findViewById(R.id.lvWhitelistedItems);
+        WhitelistListedAdapter adapter = new WhitelistListedAdapter(this,
+                R.layout.listview_whitelisted_row,
+                mWhitelistItems);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG, "onItemClick pos:" + position + " id:" + id);
+
+                Intent launchIntent = new Intent();
+                launchIntent.setComponent(new ComponentName(mWhitelistItems.get(position).getAppName(),
+                        mWhitelistItems.get(position).getAppActivity()));
+                startActivity(launchIntent);
+            }
+        });
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         mLocalBroadcastManager.registerReceiver(mStopBroadcastReceiver,
@@ -37,6 +69,7 @@ public class ScreenBlockerActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mLocalBroadcastManager.unregisterReceiver(mStopBroadcastReceiver);
+        mDataHelper.close();
     }
 
     BroadcastReceiver mStopBroadcastReceiver = new BroadcastReceiver() {

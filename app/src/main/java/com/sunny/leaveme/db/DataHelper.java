@@ -165,6 +165,22 @@ public class DataHelper {
         return whitelistItems;
     }
 
+    public ArrayList<WhitelistItem> getAvailableWhitelistItems() {
+        ArrayList<WhitelistItem> whitelistItems = new ArrayList<>();
+        String whereClause = WhitelistItem.ISAVAILABLE + "=?";
+        String[] whereArgs = new String[] {
+            "1"
+        };
+        Cursor c = mDb.query(WhitelistItem.TABLE_NAME, null, whereClause, whereArgs, null, null, null);
+        while (c.moveToNext()) {
+            WhitelistItem whitelistItem = getWhitelistItemFromCursor(c);
+            whitelistItems.add(whitelistItem);
+        }
+        c.close();
+
+        return whitelistItems;
+    }
+
     private WhitelistItem getWhitelistItemFromCursor(Cursor c) {
         WhitelistItem whitelistItem = new WhitelistItem();
         whitelistItem.setId(c.getInt(c.getColumnIndex(WhitelistItem.ID)));

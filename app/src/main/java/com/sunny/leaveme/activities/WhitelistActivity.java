@@ -46,12 +46,6 @@ public class WhitelistActivity extends AppCompatActivity {
                     }
                 });
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "onItemClick pos:" + position + " id:" + id);
-            }
-        });
     }
 
     @Override
