@@ -217,24 +217,30 @@ public class MonitorService extends Service {
     private class LockScreenReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent != null && intent.getAction() != null) {
-                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                    Log.d(TAG, "Do nothing");
-                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                    Log.d(TAG, "stop timer");
-                    stopMonitorTimer();
-                    mSensorReader.stop();
-                } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
-                    Log.d(TAG, "start timer");
+            if ((intent == null) || (intent.getAction() == null)) {
+                Log.e(TAG, "Empty intent");
+                return;
+            }
+
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                Log.d(TAG, "Do nothing");
+            } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                Log.d(TAG, "stop timer");
+                stopMonitorTimer();
+                mSensorReader.stop();
+            } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
+                Log.d(TAG, "start timer");
+                tryStartScreenBlockerIfNeed();
+            } else if (intent.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
+                String reason = intent.getStringExtra("reason");
+                if (reason == null) {
+                    Log.d(TAG, "Ignore no reason intent");
+                    return;
+                }
+
+                if (reason.equals("homekey")) {
+                    Log.d(TAG, "homekey");
                     tryStartScreenBlockerIfNeed();
-                } else if (intent.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                    String reason = intent.getStringExtra("reason");
-                    if (reason != null) {
-                        if (reason.equals("homekey")) {
-                            Log.d(TAG, "homekey");
-                            tryStartScreenBlockerIfNeed();
-                        }
-                    }
                 }
             }
         }
