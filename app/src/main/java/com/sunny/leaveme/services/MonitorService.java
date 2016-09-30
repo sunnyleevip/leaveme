@@ -172,7 +172,6 @@ public class MonitorService extends Service {
             } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
                 stopMonitorTimer();
                 mSensorReader.stop();
-                stopScreenBlocker();
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("light_switch", true);
                 if (isChecked) {
@@ -181,6 +180,10 @@ public class MonitorService extends Service {
                 } else {
                     mSensorReader.removeSensorChangedListener(Sensor.TYPE_LIGHT);
                     mSensorReader.stopWithNoListener();
+                    if (mReason == MONITOR_REASON_LIGHT) {
+                        stopMonitorTimer();
+                        stopScreenBlocker();
+                    }
                 }
             }
         }
