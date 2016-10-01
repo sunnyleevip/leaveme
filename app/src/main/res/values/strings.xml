@@ -6,12 +6,14 @@
     <!-- Schedule settings -->
     <string name="pref_header_schedule">Schedule</string>
 
-    <!-- Schedule settings -->
+    <!-- Function -->
     <string name="pref_header_function">Function</string>
     <string name="pref_title_auto_detected_surrounding_light">Enable detecting surrounding light</string>
     <string name="pref_description_auto_detected_surrounding_light">Block screen when light is too dark</string>
+    <string name="pref_title_avoid_using_too_long">Enable to avoid keep using your phone too long</string>
+    <string name="pref_description_avoid_using_too_long">Using 30 minutes should stop 5 minutes</string>
 
-    <!-- Schedule settings -->
+    <!-- White List -->
     <string name="pref_header_whitelist">White List</string>
 
     <!-- Other UI -->

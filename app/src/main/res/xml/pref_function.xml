@@ -4,4 +4,10 @@
         android:key="auto_detected_surrounding_light_switch"
         android:summary="@string/pref_title_auto_detected_surrounding_light"
         android:title="@string/pref_description_auto_detected_surrounding_light" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="avoid_using_too_long_switch"
+        android:summary="@string/pref_description_avoid_using_too_long"
+        android:title="@string/pref_title_avoid_using_too_long" />
 </PreferenceScreen>
