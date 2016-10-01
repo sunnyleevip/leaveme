@@ -1,13 +1,34 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="auto_detected_surrounding_light_switch"
-        android:summary="@string/pref_title_auto_detected_surrounding_light"
-        android:title="@string/pref_description_auto_detected_surrounding_light" />
 
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="avoid_using_too_long_switch"
-        android:summary="@string/pref_description_avoid_using_too_long"
-        android:title="@string/pref_title_avoid_using_too_long" />
+    <PreferenceCategory android:title="Dark Blocker">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="auto_detected_surrounding_light_switch"
+            android:summary="@string/pref_title_auto_detected_surrounding_light"
+            android:title="@string/pref_description_auto_detected_surrounding_light" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Long Time Using Blocker">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="avoid_using_too_long_switch"
+            android:title="@string/pref_title_avoid_using_too_long" />
+        <EditTextPreference
+            android:defaultValue="30"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Using time(Minutes)"
+            android:key="etp_long_time_using_time"
+            android:dependency="avoid_using_too_long_switch"
+            android:numeric="signed" />
+        <EditTextPreference
+            android:defaultValue="5"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Blocking time(Minutes)"
+            android:key="etp_long_time_blocking_time"
+            android:dependency="avoid_using_too_long_switch"
+            android:numeric="signed" />
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -4,12 +4,12 @@ package com.sunny.leaveme.activities;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -26,7 +26,7 @@ import com.sunny.leaveme.services.PackageUpdateService;
 import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private static Preference.OnPreferenceChangeListener sPreferenceChangeListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             Log.d(TAG, "onPreferenceChange");
@@ -36,11 +36,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 intent.putExtra("light_switch", (Boolean)value);
                 mLocalBroadcastManager.sendBroadcast(intent);
                 return true;
+            } else if (mLongTimeBlockerSwitch == preference) {
+                Log.d(TAG, "Long time blocker changed: " + value);
+            } else if ((mLongTimeBlockerUsingTimeEditText == preference) ||
+                    (mLongTimeBlockerBlockingTimeEditText == preference)) {
+                preference.setSummary(value.toString());
             }
 
             return true;
         }
     };
+
+    private static void bindChangeListenerToSwitch(Preference preference) {
+        preference.setOnPreferenceChangeListener(sPreferenceChangeListener);
+        sPreferenceChangeListener.onPreferenceChange(preference,
+                PreferenceManager
+                        .getDefaultSharedPreferences(preference.getContext())
+                        .getBoolean(preference.getKey(), true));
+    }
+
+    private static void bindChangeListenerToEditText(Preference preference) {
+        preference.setOnPreferenceChangeListener(sPreferenceChangeListener);
+        sPreferenceChangeListener.onPreferenceChange(preference,
+                PreferenceManager
+                        .getDefaultSharedPreferences(preference.getContext())
+                        .getString(preference.getKey(), ""));
+    }
 
     /**
      * Helper method to determine if the device has an extra-large screen. For
@@ -55,6 +76,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private final static String TAG = "SettingsActivity";
     private static LocalBroadcastManager mLocalBroadcastManager;
     private static SwitchPreference mLightDetectingSwitch;
+    private static SwitchPreference mLongTimeBlockerSwitch;
+    private static EditTextPreference mLongTimeBlockerUsingTimeEditText;
+    private static EditTextPreference mLongTimeBlockerBlockingTimeEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +119,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
+    private static final String PREFERENCE_KEY_LONG_TIME_BLOCKER = "avoid_using_too_long_switch";
+    private static final String PREFERENCE_KEY_LONG_TIME_BLOCKER_USING_TIME = "etp_long_time_using_time";
+    private static final String PREFERENCE_KEY_LONG_TIME_BLOCKER_BLOCKING_TIME = "etp_long_time_blocking_time";
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FunctionPreferenceFragment extends PreferenceFragment {
@@ -117,17 +144,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 return;
             }
 
-            mLightDetectingSwitch = (SwitchPreference)findPreference(PREFERENCE_KEY_LIGHT_DETECT);
+            mLightDetectingSwitch = (SwitchPreference) findPreference(PREFERENCE_KEY_LIGHT_DETECT);
             if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) == null) {
                 Log.e(TAG, "Not support sensor: Sensor.TYPE_LIGHT");
                 mLightDetectingSwitch.setEnabled(false);
             } else {
-                mLightDetectingSwitch.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-                sBindPreferenceSummaryToValueListener.onPreferenceChange(mLightDetectingSwitch,
-                        PreferenceManager
-                                .getDefaultSharedPreferences(mLightDetectingSwitch.getContext())
-                                .getBoolean(mLightDetectingSwitch.getKey(), true));
+                bindChangeListenerToSwitch(mLightDetectingSwitch);
             }
+
+            mLongTimeBlockerSwitch = (SwitchPreference) findPreference(PREFERENCE_KEY_LONG_TIME_BLOCKER);
+            bindChangeListenerToSwitch(mLongTimeBlockerSwitch);
+
+            mLongTimeBlockerUsingTimeEditText = (EditTextPreference) findPreference(PREFERENCE_KEY_LONG_TIME_BLOCKER_USING_TIME);
+            bindChangeListenerToEditText(mLongTimeBlockerUsingTimeEditText);
+            mLongTimeBlockerBlockingTimeEditText = (EditTextPreference) findPreference(PREFERENCE_KEY_LONG_TIME_BLOCKER_BLOCKING_TIME);
+            bindChangeListenerToEditText(mLongTimeBlockerBlockingTimeEditText);
         }
 
         @Override
