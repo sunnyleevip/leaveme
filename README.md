@@ -1,4 +1,4 @@
-# leaveme
+# LeaveMe
 An Android app to help you stay away from mobile.
 Block screen to avoid using mobile phone.
 
