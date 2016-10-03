@@ -21,7 +21,7 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 
-import com.sunny.leaveme.ActionStr;
+import com.sunny.leaveme.common.ActionStr;
 import com.sunny.leaveme.activities.uihelper.ScheduleListAdapter;
 import com.sunny.leaveme.db.DataHelper;
 import com.sunny.leaveme.R;

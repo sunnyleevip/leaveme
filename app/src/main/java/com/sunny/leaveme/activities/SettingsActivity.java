@@ -17,7 +17,7 @@ import android.preference.SwitchPreference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.sunny.leaveme.ActionStr;
+import com.sunny.leaveme.common.ActionStr;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.services.ManagerService;
 import com.sunny.leaveme.services.MonitorService;
@@ -35,9 +35,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Intent intent = new Intent(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
                 intent.putExtra("light_switch", (Boolean)value);
                 mLocalBroadcastManager.sendBroadcast(intent);
-                return true;
             } else if (mLongTimeBlockerSwitch == preference) {
                 Log.d(TAG, "Long time blocker changed: " + value);
+                Intent intent = new Intent(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE);
+                intent.putExtra("long_time_blocker_switch", (Boolean)value);
+                mLocalBroadcastManager.sendBroadcast(intent);
+                return true;
             } else if ((mLongTimeBlockerUsingTimeEditText == preference) ||
                     (mLongTimeBlockerBlockingTimeEditText == preference)) {
                 preference.setSummary(value.toString());

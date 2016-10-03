@@ -1,4 +1,4 @@
-package com.sunny.leaveme;
+package com.sunny.leaveme.common;
 
 /**
  * Created by Sunny Li on 2016/9/25
@@ -16,6 +16,8 @@ public class ActionStr {
             = "com.sunny.leaveme.ACTION_STOP_MONITOR_AND_KEEP_REASON";
     public final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE
             = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
+    public final static String ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE
+            = "com.sunny.leaveme.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE";
     public final static String ACTION_UPDATE_VIEW
             = "com.sunny.leaveme.ACTION_UPDATE_VIEW";
     public final static String ACTION_CHECK_PACKAGE_UPDATE

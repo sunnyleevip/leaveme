@@ -43,7 +43,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".AlarmHelper$AlarmBroadcastReceiver" />
+        <receiver android:name=".common.AlarmHelper$AlarmBroadcastReceiver" />
 
         <activity android:name=".activities.WhitelistActivity" />
 

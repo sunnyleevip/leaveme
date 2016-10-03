@@ -1,4 +1,4 @@
-package com.sunny.leaveme;
+package com.sunny.leaveme.common;
 
 import android.content.Context;
 import android.hardware.Sensor;

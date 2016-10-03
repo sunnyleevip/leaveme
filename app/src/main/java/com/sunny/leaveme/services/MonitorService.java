@@ -17,9 +17,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.sunny.leaveme.ActionStr;
-import com.sunny.leaveme.SensorReader;
-import com.sunny.leaveme.SensorReader.SensorChangedListener;
+import com.sunny.leaveme.common.ActionStr;
+import com.sunny.leaveme.common.SensorReader;
+import com.sunny.leaveme.common.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
 
 import java.lang.ref.WeakReference;
@@ -33,6 +33,7 @@ public class MonitorService extends Service {
     private final static int MONITOR_CHECK = 101;
     private final static float SENSOR_THRESHOLD_LIGHT_LOW = 1.0f;
     private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
+    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER = "avoid_using_too_long_switch";
 
     private int mReason = MONITOR_REASON_NONE;
     private final static int MONITOR_REASON_NONE = 0;
@@ -130,15 +131,20 @@ public class MonitorService extends Service {
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mSensorReader = new SensorReader(this);
         if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
             // support light sensor
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             if (prefs.getBoolean(PREFERENCE_KEY_LIGHT_DETECT, true)) {
                 mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
             }
         }
         mSensorReader.start();
+
+        // Long time use blocker
+        if (prefs.getBoolean(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER, true)) {
+        }
+
         Log.d(TAG, "MonitorService onCreate");
     }
 
@@ -184,6 +190,11 @@ public class MonitorService extends Service {
                         stopMonitorTimer();
                         stopScreenBlocker();
                     }
+                }
+            } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE)) {
+                boolean isChecked = intent.getBooleanExtra("long_time_blocker_switch", true);
+                if (isChecked) {
+                } else {
                 }
             }
         }

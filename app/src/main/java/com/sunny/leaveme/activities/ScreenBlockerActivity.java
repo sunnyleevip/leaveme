@@ -18,7 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.sunny.leaveme.ActionStr;
+import com.sunny.leaveme.common.ActionStr;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.activities.uihelper.WhitelistListedAdapter;
 import com.sunny.leaveme.db.DataHelper;

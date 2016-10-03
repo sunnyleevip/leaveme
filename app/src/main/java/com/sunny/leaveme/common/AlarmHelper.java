@@ -1,4 +1,4 @@
-package com.sunny.leaveme;
+package com.sunny.leaveme.common;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
