@@ -97,13 +97,13 @@ public class MonitorService extends Service {
                     }
 
                     if (currentInfo != null) {
-                        Log.d(TAG, "packageName: " + currentInfo.processName);
+                        //Log.d(TAG, "packageName: " + currentInfo.processName);
                         if (!currentInfo.processName.equals("com.sunny.leaveme")) {
-                            Log.d(TAG, "running something else");
+                            //Log.d(TAG, "running something else");
                             monitorService.startScreenBlocker();
                         }
                     } else {
-                        Log.d(TAG, "running something else");
+                        //Log.d(TAG, "running something else");
                         monitorService.startScreenBlocker();
                     }
 
@@ -175,6 +175,7 @@ public class MonitorService extends Service {
                 mReason = MONITOR_REASON_NONE;
                 stopMonitorTimer();
                 mSensorReader.stop();
+                stopScreenBlocker();
             } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
                 stopMonitorTimer();
                 mSensorReader.stop();

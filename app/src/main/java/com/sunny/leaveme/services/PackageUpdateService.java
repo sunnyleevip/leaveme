@@ -42,9 +42,7 @@ public class PackageUpdateService extends Service implements Runnable {
 
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ActionStr.ACTION_START_MONITOR);
-        intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR);
-        intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
+        intentFilter.addAction(ActionStr.ACTION_CHECK_PACKAGE_UPDATE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
         Thread thread = new Thread(this);

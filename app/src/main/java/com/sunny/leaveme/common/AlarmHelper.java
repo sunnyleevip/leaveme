@@ -16,19 +16,16 @@ public class AlarmHelper {
     private final static String TAG = "AlarmHelper";
     private final static String ACTION_ALARM_TIMEOUT = "com.sunny.leaveme.ACTION_ALARM_TIMEOUT";
     private Context mContext;
-    private OnAlarmTimeoutListener mOnAlarmTimeoutListener = null;
-    private SelfAlarmBroadcastReceiver mSelfAlarmBroadcastReceiver = null;
+    private OnAlarmTimeoutListener mOnAlarmTimeoutListener;
+    private SelfAlarmBroadcastReceiver mSelfAlarmBroadcastReceiver;
 
-    public AlarmHelper(Context context, OnAlarmTimeoutListener onAlarmTimeoutListener) {
+    AlarmHelper(Context context, OnAlarmTimeoutListener onAlarmTimeoutListener) {
         mContext = context;
         mOnAlarmTimeoutListener = onAlarmTimeoutListener;
-
-        if (mSelfAlarmBroadcastReceiver == null) {
-            mSelfAlarmBroadcastReceiver = new SelfAlarmBroadcastReceiver();
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(ACTION_ALARM_TIMEOUT);
-            mContext.registerReceiver(mSelfAlarmBroadcastReceiver, filter);
-        }
+        mSelfAlarmBroadcastReceiver = new SelfAlarmBroadcastReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_ALARM_TIMEOUT);
+        mContext.registerReceiver(mSelfAlarmBroadcastReceiver, filter);
     }
 
     @Override
@@ -38,7 +35,7 @@ public class AlarmHelper {
         mSelfAlarmBroadcastReceiver = null;
     }
 
-    public void startRepeatAlarm(int id, long millisecond, long intervalMillis) {
+    /*void startRepeatAlarm(int id, long millisecond, long intervalMillis) {
         Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
         PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE);
@@ -54,9 +51,9 @@ public class AlarmHelper {
 
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, millisecond, intervalMillis, sender);
-    }
+    }*/
 
-    public void startOneshotAlarm(int id, long millisecond) {
+    void startOneshotAlarm(int id, long millisecond) {
         Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
         PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE);
@@ -75,7 +72,7 @@ public class AlarmHelper {
         Log.d(TAG, "start one shot alarm id:" + id);
     }
 
-    public boolean cancelAlarm(int id) {
+    boolean cancelAlarm(int id) {
         Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
         PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_ONE_SHOT);
@@ -102,14 +99,16 @@ public class AlarmHelper {
     private class SelfAlarmBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "SelfAlarmBroadcastReceiver on id: " + intent.getIntExtra("id", 0));
-            if (mOnAlarmTimeoutListener != null) {
-                mOnAlarmTimeoutListener.onAlarmTimeout(intent.getIntExtra("id", 0));
+            if (intent.getAction().equals(ACTION_ALARM_TIMEOUT)) {
+                Log.d(TAG, "SelfAlarmBroadcastReceiver on id: " + intent.getIntExtra("id", 0));
+                if (mOnAlarmTimeoutListener != null) {
+                    mOnAlarmTimeoutListener.onAlarmTimeout(intent.getIntExtra("id", 0));
+                }
             }
         }
     }
 
-    public interface OnAlarmTimeoutListener {
+    interface OnAlarmTimeoutListener {
         void onAlarmTimeout(int id);
     }
 }
