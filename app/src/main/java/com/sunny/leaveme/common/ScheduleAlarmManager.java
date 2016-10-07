@@ -9,26 +9,30 @@ import java.util.ArrayList;
 
 /**
  * Created by Sunny Li on 2016/9/16.
- * Create Start & Stop alarm for schedule item.
+ *   Create Start & Stop alarm for schedule item.
+ * Modified by Sunny Li on 2016/10/7.
+ *   Change AlarmHelper to ClassifiedAlarm.
  */
 public class ScheduleAlarmManager {
     private final static String TAG = "ScheduleAlarmManager";
-    private AlarmHelper mStartAlarmHelper;
-    private AlarmHelper mEndAlarmHelper;
+    private final static String ALARM_TYPE_SCHEDULE_START = "Schedule Start Alarm";
+    private final static String ALARM_TYPE_SCHEDULE_END = "Schedule End Alarm";
     private OnScheduleAlarmTimeoutListener mOnScheduleAlarmTimeoutListener;
     private ArrayList<ScheduleItem> mAlarmItems;
 
     private ArrayList<Integer> mStartSchedules;
     private ArrayList<Integer> mEndSchedules;
+    private Context mContext;
 
     public ScheduleAlarmManager(Context context, OnScheduleAlarmTimeoutListener onScheduleAlarmTimeoutListener) {
+        mContext = context;
         mAlarmItems = new ArrayList<>();
         mStartSchedules = new ArrayList<>();
         mEndSchedules = new ArrayList<>();
         mOnScheduleAlarmTimeoutListener = onScheduleAlarmTimeoutListener;
-        mStartAlarmHelper = new AlarmHelper(context, new AlarmHelper.OnAlarmTimeoutListener() {
+        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_START, new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
             @Override
-            public void onAlarmTimeout(int id) {
+            public void onClassifiedAlarmTimeout(int id, String type) {
                 Log.d(TAG, "Start Alarm id:" + id);
 
                 ScheduleItem scheduleItem;
@@ -44,10 +48,9 @@ public class ScheduleAlarmManager {
             }
         });
 
-        mEndAlarmHelper = new AlarmHelper(context, new AlarmHelper.OnAlarmTimeoutListener() {
+        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_END, new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
             @Override
-            public void onAlarmTimeout(int id) {
-                id = 0 - id;
+            public void onClassifiedAlarmTimeout(int id, String type) {
                 Log.d(TAG, "End Alarm id:" + id);
 
                 ScheduleItem scheduleItem;
@@ -66,6 +69,11 @@ public class ScheduleAlarmManager {
                 }
             }
         });
+    }
+
+    public void finish() {
+        ClassifiedAlarm.unregisterType(ALARM_TYPE_SCHEDULE_START);
+        ClassifiedAlarm.unregisterType(ALARM_TYPE_SCHEDULE_END);
     }
 
     public interface OnScheduleAlarmTimeoutListener {
@@ -95,11 +103,11 @@ public class ScheduleAlarmManager {
             mAlarmItems.add(scheduleItem);
 
             Log.d(TAG, "Start Date: " + scheduleItem.getStartTimeCalendar().getTime().toString());
-            mStartAlarmHelper.startOneshotAlarm(scheduleItem.getId(),
+            ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_SCHEDULE_START, scheduleItem.getId(),
                     scheduleItem.getStartTimeCalendar().getTimeInMillis());
 
             Log.d(TAG, "End Date: " + scheduleItem.getEndTimeCalendar().getTime().toString());
-            mEndAlarmHelper.startOneshotAlarm(0 - scheduleItem.getId(),
+            ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_SCHEDULE_END, scheduleItem.getId(),
                     scheduleItem.getEndTimeCalendar().getTimeInMillis());
         }
     }
@@ -120,7 +128,7 @@ public class ScheduleAlarmManager {
                 for (int j = 0; j < mStartSchedules.size(); ++j) {
                     if (mStartSchedules.get(i) == id) {
                         Log.d(TAG, "Find exist start alarm id: " + id);
-                        mStartAlarmHelper.cancelAlarm(id);
+                        ClassifiedAlarm.cancelAlarm(mContext, ALARM_TYPE_SCHEDULE_START, id);
                         mStartSchedules.remove(i);
                         break;
                     }
@@ -129,7 +137,7 @@ public class ScheduleAlarmManager {
                 for (int j = 0; j < mEndSchedules.size(); ++j) {
                     if (mEndSchedules.get(i) == id) {
                         Log.d(TAG, "Find exist end alarm id: " + id);
-                        mEndAlarmHelper.cancelAlarm(id);
+                        ClassifiedAlarm.cancelAlarm(mContext, ALARM_TYPE_SCHEDULE_END, id);
                         mEndSchedules.remove(i);
                         return;
                     }

@@ -60,6 +60,7 @@ public class ManagerService extends Service {
     @Override
     public void onDestroy() {
         mDataHelper.close();
+        mScheduleAlarmManager.finish();
     }
 
     @Override

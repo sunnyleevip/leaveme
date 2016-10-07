@@ -5,83 +5,71 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.util.Log;
 
 /**
  * Created by Sunny Li on 2016/9/13.
- * Alarmhelper for using alarmmanager.
+ *   Alarmhelper for using AlarmManager.
+ * Modified by Sunny Li on 2016/10/7
+ *   User should use ClassifiedAlarm instead of AlarmHelper.
+ *   ClassifiedAlarm will register callback to AlarmHelper
+ *   and dispatch alarm timeout message to different type of alarm.
  */
-public class AlarmHelper {
+class AlarmHelper {
     private final static String TAG = "AlarmHelper";
-    private final static String ACTION_ALARM_TIMEOUT = "com.sunny.leaveme.ACTION_ALARM_TIMEOUT";
-    private Context mContext;
-    private OnAlarmTimeoutListener mOnAlarmTimeoutListener;
-    private SelfAlarmBroadcastReceiver mSelfAlarmBroadcastReceiver;
+    private static OnAlarmTimeoutListener sOnAlarmTimeoutListener;
 
-    AlarmHelper(Context context, OnAlarmTimeoutListener onAlarmTimeoutListener) {
-        mContext = context;
-        mOnAlarmTimeoutListener = onAlarmTimeoutListener;
-        mSelfAlarmBroadcastReceiver = new SelfAlarmBroadcastReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_ALARM_TIMEOUT);
-        mContext.registerReceiver(mSelfAlarmBroadcastReceiver, filter);
+    AlarmHelper(OnAlarmTimeoutListener onAlarmTimeoutListener) {
+        sOnAlarmTimeoutListener = onAlarmTimeoutListener;
     }
 
-    @Override
-    protected void finalize() throws java.lang.Throwable {
-        super.finalize();
-        mContext.unregisterReceiver(mSelfAlarmBroadcastReceiver);
-        mSelfAlarmBroadcastReceiver = null;
-    }
-
-    /*void startRepeatAlarm(int id, long millisecond, long intervalMillis) {
-        Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
+    /*void startRepeatAlarm(Context context, int id, long millisecond, long intervalMillis) {
+        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
-        PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE);
+        PendingIntent sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_NO_CREATE);
         if (sender != null) {
             Log.e(TAG, "Intent exist, cannot create id:"+ id);
             return;
         }
-        sender = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         if (sender == null) {
             Log.e(TAG, "Intent cannot create id:"+ id);
             return;
         }
 
-        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, millisecond, intervalMillis, sender);
     }*/
 
-    void startOneshotAlarm(int id, long millisecond) {
-        Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
+    void startOneshotAlarm(Context context, int id, long millisecond) {
+        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
-        PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE);
+        PendingIntent sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_NO_CREATE);
         if (sender != null) {
             Log.e(TAG, "Intent exist, cannot create id:" + id);
             return;
         }
-        sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_ONE_SHOT);
+        sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_ONE_SHOT);
         if (sender == null) {
             Log.e(TAG, "Intent cannot create id:" + id);
             return;
         }
 
-        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.set(AlarmManager.RTC_WAKEUP, millisecond, sender);
         Log.d(TAG, "start one shot alarm id:" + id);
     }
 
-    boolean cancelAlarm(int id) {
-        Intent intent = new Intent(mContext, AlarmBroadcastReceiver.class);
+    boolean cancelAlarm(Context context, int id) {
+        Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
         intent.putExtra("id", id);
-        PendingIntent sender = PendingIntent.getBroadcast(mContext, id, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_ONE_SHOT);
         if (sender == null) {
             Log.d(TAG, "Alarm has already canceled, intent not found id:" + id);
             return false;
         }
 
-        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.cancel(sender);
         Log.d(TAG, "cancel alarm id: " + id);
         return true;
@@ -90,20 +78,8 @@ public class AlarmHelper {
     public static class AlarmBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Intent intentSelf = new Intent(ACTION_ALARM_TIMEOUT);
-            intentSelf.putExtra("id", intent.getIntExtra("id", 0));
-            context.sendBroadcast(intentSelf);
-        }
-    }
-
-    private class SelfAlarmBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(ACTION_ALARM_TIMEOUT)) {
-                Log.d(TAG, "SelfAlarmBroadcastReceiver on id: " + intent.getIntExtra("id", 0));
-                if (mOnAlarmTimeoutListener != null) {
-                    mOnAlarmTimeoutListener.onAlarmTimeout(intent.getIntExtra("id", 0));
-                }
+            if (sOnAlarmTimeoutListener != null) {
+                sOnAlarmTimeoutListener.onAlarmTimeout(intent.getIntExtra("id", 0));
             }
         }
     }
