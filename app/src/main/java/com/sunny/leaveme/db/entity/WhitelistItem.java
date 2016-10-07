@@ -14,11 +14,11 @@ public class WhitelistItem {
     public final static String ISAVAILABLE = "ISAVAILABLE";
 
     public final static String CREATE = "create table whitelist(" +
-            "ID             INTEGER     PRIMARY KEY     AUTOINCREMENT," +
-            "APPLABEL       TEXT                        NOT NULL," +
-            "APPNAME        TEXT                        NOT NULL," +
-            "APPACTIVITY    TEXT                        NOT NULL," +
-            "ISAVAILABLE    INTEGER                     NOT NULL" +
+            "ID             INTEGER     PRIMARY KEY," +
+            "APPLABEL       TEXT        NOT NULL,"    +
+            "APPNAME        TEXT        NOT NULL,"    +
+            "APPACTIVITY    TEXT        NOT NULL,"    +
+            "ISAVAILABLE    INTEGER     NOT NULL"     +
             ");";
 
     private int mId = -1;

@@ -33,11 +33,11 @@ public class ScheduleItem implements Serializable {
             64 -> Saturday
     */
     public final static String CREATE = "create table schedule(" +
-            "ID             INTEGER     PRIMARY KEY     AUTOINCREMENT," +
-            "STARTTIME      INTEGER                     NOT NULL," +
-            "ENDTIME        INTEGER                     NOT NULL," +
-            "REPEAT_DAYS    INTEGER                     NOT NULL," +
-            "ISAVAILABLE    INTEGER                     NOT NULL);";
+            "ID             INTEGER     PRIMARY KEY," +
+            "STARTTIME      INTEGER     NOT NULL,"    +
+            "ENDTIME        INTEGER     NOT NULL,"    +
+            "REPEAT_DAYS    INTEGER     NOT NULL,"    +
+            "ISAVAILABLE    INTEGER     NOT NULL);";
 
     private int mId = -1;
     private ScheduleTime mStartTime;
