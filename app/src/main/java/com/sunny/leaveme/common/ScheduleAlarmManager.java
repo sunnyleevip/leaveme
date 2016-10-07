@@ -24,13 +24,15 @@ public class ScheduleAlarmManager {
     private ArrayList<Integer> mEndSchedules;
     private Context mContext;
 
-    public ScheduleAlarmManager(Context context, OnScheduleAlarmTimeoutListener onScheduleAlarmTimeoutListener) {
+    public ScheduleAlarmManager(Context context,
+                                OnScheduleAlarmTimeoutListener onScheduleAlarmTimeoutListener) {
         mContext = context;
         mAlarmItems = new ArrayList<>();
         mStartSchedules = new ArrayList<>();
         mEndSchedules = new ArrayList<>();
         mOnScheduleAlarmTimeoutListener = onScheduleAlarmTimeoutListener;
-        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_START, new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
+        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_START,
+                new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
             @Override
             public void onClassifiedAlarmTimeout(int id, String type) {
                 Log.d(TAG, "Start Alarm id:" + id);
@@ -48,7 +50,8 @@ public class ScheduleAlarmManager {
             }
         });
 
-        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_END, new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
+        ClassifiedAlarm.registerType(ALARM_TYPE_SCHEDULE_END,
+                new ClassifiedAlarm.OnClassifiedAlarmTimeoutListener() {
             @Override
             public void onClassifiedAlarmTimeout(int id, String type) {
                 Log.d(TAG, "End Alarm id:" + id);

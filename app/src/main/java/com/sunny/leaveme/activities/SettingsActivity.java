@@ -40,10 +40,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Intent intent = new Intent(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE);
                 intent.putExtra("long_time_blocker_switch", (Boolean)value);
                 mLocalBroadcastManager.sendBroadcast(intent);
-                return true;
             } else if ((mLongTimeBlockerUsingTimeEditText == preference) ||
                     (mLongTimeBlockerBlockingTimeEditText == preference)) {
                 preference.setSummary(value.toString());
+                Log.d(TAG, "Long time blocker timing changed: " + value.toString());
+                Intent intent = new Intent(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_TIMING_VALUE);
+                mLocalBroadcastManager.sendBroadcast(intent);
             }
 
             return true;

@@ -25,6 +25,7 @@ class ClassifiedAlarm {
         public void onAlarmTimeout(int alarmId) {
             int typeId = alarmId / MAX_ALARM_NUM_PER_TYPE;
             int id = alarmId % MAX_ALARM_NUM_PER_TYPE;
+            Log.d(TAG, "onAlarmTimeout--type: " + sTypes.get(typeId) + " id:" + id);
             sAlarmTimeoutListener.get(typeId).onClassifiedAlarmTimeout(id, sTypes.get(typeId));
         }
     });
@@ -43,7 +44,9 @@ class ClassifiedAlarm {
     }
 
     static void unregisterType(String typeStr) {
-        unregisterType(getIdByType(typeStr));
+        if (getIdByType(typeStr) >= 0) {
+            unregisterType(getIdByType(typeStr));
+        }
     }
 
     private static int getIdByType(String typeStr) {

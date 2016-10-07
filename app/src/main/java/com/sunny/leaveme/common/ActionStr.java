@@ -18,6 +18,8 @@ public class ActionStr {
             = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
     public final static String ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE
             = "com.sunny.leaveme.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE";
+    public final static String ACTION_UPDATE_LONG_TIME_BLOCKER_TIMING_VALUE
+            = "com.sunny.leaveme.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE";
     public final static String ACTION_UPDATE_VIEW
             = "com.sunny.leaveme.ACTION_UPDATE_VIEW";
     public final static String ACTION_CHECK_PACKAGE_UPDATE

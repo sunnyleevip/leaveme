@@ -18,12 +18,10 @@ import java.util.ArrayList;
 public class DataHelper {
     private static final String TAG = "DataHelper";
 
-    private Context mContext;
     private DbHelper mDbHelper;
     private SQLiteDatabase mDb = null;
 
     public DataHelper(Context context) {
-        mContext = context;
         mDbHelper = new DbHelper(context);
         mDb = mDbHelper.getWritableDatabase();
     }
