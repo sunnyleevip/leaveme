@@ -1,6 +1,8 @@
-package com.sunny.leaveme.common;
+package com.sunny.leaveme.services.monitor;
 
 import android.content.Context;
+
+import com.sunny.leaveme.common.ClassifiedAlarm;
 
 /**
  * Created by Sunny Li on 2016/10/7.
@@ -8,13 +10,13 @@ import android.content.Context;
  * Call callback when any of those two alarm is timeout.
  */
 
-public class LongTimeUsingBlockerAlarmManager {
+class LongTimeUsingBlockerAlarmManager {
     private final static String ALARM_TYPE_LONG_TIME_USING_BLOCKER = "Long Time Using Blocker Alarm";
     private final static int ALARM_ID_USING = 0;
     private final static int ALARM_ID_BLOCKING = 1;
     private Context mContext;
     private OnAlarmTimeoutListener mOnAlarmTimeoutListener;
-    public LongTimeUsingBlockerAlarmManager(Context context,
+    LongTimeUsingBlockerAlarmManager(Context context,
                                             OnAlarmTimeoutListener onAlarmTimeoutListener) {
         mContext = context;
         mOnAlarmTimeoutListener = onAlarmTimeoutListener;
@@ -31,28 +33,28 @@ public class LongTimeUsingBlockerAlarmManager {
         });
     }
 
-    public void finish() {
+    void finish() {
         ClassifiedAlarm.unregisterType(ALARM_TYPE_LONG_TIME_USING_BLOCKER);
     }
 
-    public void updateAlarm(long usingMillis, long blockingMillis) {
+    void updateAlarm(long usingMillis, long blockingMillis) {
         cancelAlarm();
         startAlarm(usingMillis, blockingMillis);
     }
 
-    public void startAlarm(long usingMillis, long blockingMillis) {
+    void startAlarm(long usingMillis, long blockingMillis) {
         ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER,
                 ALARM_ID_USING, usingMillis);
         ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER,
                 ALARM_ID_BLOCKING, blockingMillis);
     }
 
-    public void cancelAlarm() {
+    void cancelAlarm() {
         ClassifiedAlarm.cancelAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER, ALARM_ID_USING);
         ClassifiedAlarm.cancelAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER, ALARM_ID_BLOCKING);
     }
 
-    public interface OnAlarmTimeoutListener {
+    interface OnAlarmTimeoutListener {
         void onUsingAlarmTimeout();
         void onBlockingAlarmTimeout();
     }

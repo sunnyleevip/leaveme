@@ -1,4 +1,4 @@
-package com.sunny.leaveme.services;
+package com.sunny.leaveme.services.monitor;
 
 import android.app.ActivityManager;
 import android.app.Service;
@@ -18,7 +18,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sunny.leaveme.common.ActionStr;
-import com.sunny.leaveme.common.LongTimeUsingBlockerAlarmManager;
 import com.sunny.leaveme.common.SensorReader;
 import com.sunny.leaveme.common.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;

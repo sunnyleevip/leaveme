@@ -19,11 +19,11 @@
         </activity>
 
         <service
-            android:name=".services.MonitorService"
+            android:name=".services.monitor.MonitorService"
             android:enabled="true"
             android:exported="false" />
 
-        <receiver android:name=".services.MonitorService$receiver">
+        <receiver android:name=".services.monitor.MonitorService$receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

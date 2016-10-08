@@ -14,7 +14,7 @@ import java.util.ArrayList;
  *   when never use it any more.
  */
 
-class ClassifiedAlarm {
+public class ClassifiedAlarm {
     private final static String TAG = "ClassifiedAlarm";
     private final static int MAX_ALARM_NUM_PER_TYPE = 1000;
 
@@ -30,7 +30,7 @@ class ClassifiedAlarm {
         }
     });
 
-    static int registerType(String typeStr, OnClassifiedAlarmTimeoutListener onAlarmTimeoutListener) {
+    public static int registerType(String typeStr, OnClassifiedAlarmTimeoutListener onAlarmTimeoutListener) {
         sTypes.add(typeStr);
         sAlarmTimeoutListener.add(onAlarmTimeoutListener);
         Log.i(TAG, "registerType: " + typeStr + " id: " + getIdByType(typeStr));
@@ -43,7 +43,7 @@ class ClassifiedAlarm {
         sAlarmTimeoutListener.remove(typeId);
     }
 
-    static void unregisterType(String typeStr) {
+    public static void unregisterType(String typeStr) {
         if (getIdByType(typeStr) >= 0) {
             unregisterType(getIdByType(typeStr));
         }
@@ -53,7 +53,7 @@ class ClassifiedAlarm {
         return sTypes.indexOf(typeStr);
     }
 
-    static void startOneshotAlarm(Context context, String typeStr, int id, long millisecond) {
+    public static void startOneshotAlarm(Context context, String typeStr, int id, long millisecond) {
         if (id >= MAX_ALARM_NUM_PER_TYPE) {
             throw new IllegalArgumentException("id >= MAX_ALARM_NUM_PER_TYPE");
         }
@@ -61,12 +61,12 @@ class ClassifiedAlarm {
         sAlarmHelper.startOneshotAlarm(context, alarmId, millisecond);
     }
 
-    static boolean cancelAlarm(Context context, String typeStr, int id) {
+    public static boolean cancelAlarm(Context context, String typeStr, int id) {
         int alarmId = getIdByType(typeStr) * MAX_ALARM_NUM_PER_TYPE + id;
         return sAlarmHelper.cancelAlarm(context, alarmId);
     }
 
-    interface OnClassifiedAlarmTimeoutListener {
+    public interface OnClassifiedAlarmTimeoutListener {
         void onClassifiedAlarmTimeout(int id, String type);
     }
 }

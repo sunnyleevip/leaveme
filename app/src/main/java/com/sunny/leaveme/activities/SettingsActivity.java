@@ -20,7 +20,7 @@ import android.util.Log;
 import com.sunny.leaveme.common.ActionStr;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.services.ManagerService;
-import com.sunny.leaveme.services.MonitorService;
+import com.sunny.leaveme.services.monitor.MonitorService;
 import com.sunny.leaveme.services.PackageUpdateService;
 
 import java.util.List;
