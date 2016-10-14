@@ -1,6 +1,5 @@
 package com.sunny.leaveme.services.monitor;
 
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,9 +22,7 @@ import com.sunny.leaveme.common.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -71,43 +68,9 @@ public class MonitorService extends Service {
                         break;
                     }
 
-                    final int PROCESS_STATE_TOP = 2;
-                    ActivityManager.RunningAppProcessInfo currentInfo = null;
-                    Field field = null;
-                    try {
-                        field = ActivityManager.RunningAppProcessInfo.class.getDeclaredField("processState");
-                    } catch (Exception ignored) {
-                    }
-
-                    ActivityManager am = (ActivityManager) monitorService.getContext().getSystemService(Context.ACTIVITY_SERVICE);
-                    List<ActivityManager.RunningAppProcessInfo> appList = am.getRunningAppProcesses();
-                    for (ActivityManager.RunningAppProcessInfo app : appList) {
-                        if (app.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-                                && app.importanceReasonCode == ActivityManager.RunningAppProcessInfo.REASON_UNKNOWN) {
-                            Integer state = null;
-                            try {
-                                if (field != null) {
-                                    state = field.getInt(app);
-                                }
-                            } catch (Exception e) {
-                                Log.e(TAG, "field.getInt(app) Exception");
-                                e.printStackTrace();
-                            }
-                            if (state != null && state == PROCESS_STATE_TOP) {
-                                currentInfo = app;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (currentInfo != null) {
-                        //Log.d(TAG, "packageName: " + currentInfo.processName);
-                        if (!currentInfo.processName.equals("com.sunny.leaveme")) {
-                            //Log.d(TAG, "running something else");
-                            monitorService.startScreenBlocker();
-                        }
-                    } else {
-                        //Log.d(TAG, "running something else");
+                    ActivityManagerHelper activityManagerHelper =
+                            new ActivityManagerHelper(monitorService.getContext());
+                    if (!"com.sunny.leaveme".equals(activityManagerHelper.currentProcessName())) {
                         monitorService.startScreenBlocker();
                     }
 
