@@ -8,10 +8,10 @@ package com.sunny.leaveme.common;
 public class ActionStr {
     public final static String ACTION_STOP_SCREEN_BLOCKER
             = "com.sunny.leaveme.ACTION_STOP_SCREEN_BLOCKER";
-    public final static String ACTION_START_MONITOR
-            = "com.sunny.leaveme.ACTION_START_MONITOR";
-    public final static String ACTION_STOP_MONITOR
-            = "com.sunny.leaveme.ACTION_STOP_MONITOR";
+    public final static String ACTION_SCHEDULE_ON
+            = "com.sunny.leaveme.ACTION_SCHEDULE_ON";
+    public final static String ACTION_SCHEDULE_OFF
+            = "com.sunny.leaveme.ACTION_SCHEDULE_OFF";
     public final static String ACTION_STOP_MONITOR_AND_KEEP_REASON
             = "com.sunny.leaveme.ACTION_STOP_MONITOR_AND_KEEP_REASON";
     public final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE

@@ -87,12 +87,12 @@ public class ManagerService extends Service {
     }
 
     private void startMonitor() {
-        Intent intent = new Intent(ActionStr.ACTION_START_MONITOR);
+        Intent intent = new Intent(ActionStr.ACTION_SCHEDULE_ON);
         mLocalBroadcastManager.sendBroadcast(intent);
     }
 
     private void stopMonitor() {
-        Intent intent = new Intent(ActionStr.ACTION_STOP_MONITOR);
+        Intent intent = new Intent(ActionStr.ACTION_SCHEDULE_OFF);
         mLocalBroadcastManager.sendBroadcast(intent);
     }
 
