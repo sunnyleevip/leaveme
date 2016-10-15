@@ -6,18 +6,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sunny.leaveme.common.ActionStr;
+import com.sunny.leaveme.common.PreferenceDataHelper;
 import com.sunny.leaveme.common.SensorReader;
 import com.sunny.leaveme.common.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
@@ -34,10 +33,6 @@ public class MonitorService extends Service {
     private static final String TAG = "MonitorService";
     private final static int MONITOR_CHECK = 101;
     private final static float SENSOR_THRESHOLD_LIGHT_LOW = 1.0f;
-    private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_SWITCH = "avoid_using_too_long_switch";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_USING_TIME = "etp_long_time_using_time";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_BLOCKING_TIME = "etp_long_time_blocking_time";
 
     private LocalBroadcastManager mLocalBroadcastManager;
 
@@ -161,11 +156,10 @@ public class MonitorService extends Service {
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_TIMING_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mSensorReader = new SensorReader(this);
         if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
             // support light sensor
-            if (prefs.getBoolean(PREFERENCE_KEY_LIGHT_DETECT, true)) {
+            if (PreferenceDataHelper.getLightDetectSwitchValue(this)) {
                 mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
             }
         }
@@ -186,7 +180,7 @@ public class MonitorService extends Service {
                         mMonitorState.setState(State.STATE_LONG_TIME_USE_BLOCKER_OFF);
                     }
                 });
-        if (prefs.getBoolean(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_SWITCH, true)) {
+        if (PreferenceDataHelper.getLongTimeUseBlockerSwitchValue(mContext)) {
             updateLongTimeUseBlockerTime();
             mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
                     mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
@@ -403,11 +397,8 @@ public class MonitorService extends Service {
     }
 
     private void updateLongTimeUseBlockerTime() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mLongTimeBlockerUsingMinutes = Integer.parseInt(
-                prefs.getString(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_USING_TIME, "0"));
-        mLongTimeBlockerBlockingMinutes = Integer.parseInt(
-                prefs.getString(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_BLOCKING_TIME, "0"));
+        mLongTimeBlockerUsingMinutes = PreferenceDataHelper.getLongTimeUseBlockerUsingTimeValue(mContext);
+        mLongTimeBlockerBlockingMinutes = PreferenceDataHelper.getLongTimeUseBlockerBlockingTimeValue(mContext);
     }
 
     private boolean needUpdateBlockerAlarm() {
