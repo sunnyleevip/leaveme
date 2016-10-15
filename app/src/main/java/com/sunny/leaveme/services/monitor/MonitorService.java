@@ -24,7 +24,6 @@ import com.sunny.leaveme.activities.ScreenBlockerActivity;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -123,7 +122,6 @@ public class MonitorService extends Service {
     private int mLongTimeBlockerBlockingMinutes = 0;
     private long mScreenOffTimeInMillis = 0;
     private long mScreenOnTimeInMillis = 0;
-    private long mOldLongTimeBlockerStartTimeInMillis = 0;
     private final static long MILLIS_PER_MINUTE = 1000 * 60;
     private MonitorState mMonitorState;
 
@@ -189,7 +187,9 @@ public class MonitorService extends Service {
                     }
                 });
         if (prefs.getBoolean(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_SWITCH, true)) {
-            updateLongTimeUseBlockerAlarm();
+            updateLongTimeUseBlockerTime();
+            mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                    mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
         }
 
         Log.d(TAG, "MonitorService onCreate");
@@ -236,7 +236,9 @@ public class MonitorService extends Service {
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("long_time_blocker_switch", true);
                 if (isChecked) {
-                    updateLongTimeUseBlockerAlarm();
+                    updateLongTimeUseBlockerTime();
+                    mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 } else {
                     mLongTimeUsingBlockerAlarmManager.cancelAlarm();
                 }
@@ -296,9 +298,11 @@ public class MonitorService extends Service {
                 mScreenOnTimeInMillis = System.currentTimeMillis();
                 updateLongTimeUseBlockerTime();
                 if (needUpdateBlockerAlarm()) {
-                    updateLongTimeUseBlockerAlarm();
+                    mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 } else {
-                    startOriginalLongTimeUseBlockerAlarm();
+                    mLongTimeUsingBlockerAlarmManager.restartAlarm(
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 }
             } else if (intent.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
                 String reason = intent.getStringExtra("reason");
@@ -361,7 +365,7 @@ public class MonitorService extends Service {
         if (mTimer != null) {
             if (!mIsTimerRunning) {
                 mIsTimerRunning = true;
-                mTimer.schedule(mTask, 1000, 500);
+                mTimer.schedule(mTask, 1000, 100);
             }
         }
     }
@@ -373,7 +377,6 @@ public class MonitorService extends Service {
         }
 
         PowerManager powerManager = (PowerManager)mContext.getSystemService(POWER_SERVICE);
-
         if (powerManager == null) {
             Log.e(TAG, "Cannot access PowerManager");
             return false;
@@ -410,44 +413,5 @@ public class MonitorService extends Service {
     private boolean needUpdateBlockerAlarm() {
         return (mScreenOnTimeInMillis - mScreenOffTimeInMillis) >
                 mLongTimeBlockerBlockingMinutes * MILLIS_PER_MINUTE;
-    }
-
-    private void updateLongTimeUseBlockerAlarm() {
-        Log.d(TAG, "updateLongTimeUseBlockerAlarm");
-        updateLongTimeUseBlockerTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        mOldLongTimeBlockerStartTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerUsingMinutes);
-        long longTimeBlockerUsingEndTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerBlockingMinutes);
-        long longTimeBlockerBlockingEndTimeInMillis = calendar.getTimeInMillis();
-        Log.d(TAG, "mOldLongTimeBlockerStartTimeInMillis:" + mOldLongTimeBlockerStartTimeInMillis);
-        Log.d(TAG, "mLongTimeBlockerUsingMinutes:" + mLongTimeBlockerUsingMinutes);
-        Log.d(TAG, "mLongTimeBlockerBlockingMinutes:" + mLongTimeBlockerBlockingMinutes);
-        Log.d(TAG, "longTimeBlockerUsingEndTimeInMillis:" + longTimeBlockerUsingEndTimeInMillis);
-        Log.d(TAG, "longTimeBlockerBlockingEndTimeInMillis:" + longTimeBlockerBlockingEndTimeInMillis);
-        Log.d(TAG, "currentTimeInMillis:" + System.currentTimeMillis());
-        mLongTimeUsingBlockerAlarmManager.updateAlarm(
-                longTimeBlockerUsingEndTimeInMillis, longTimeBlockerBlockingEndTimeInMillis);
-    }
-
-    private void startOriginalLongTimeUseBlockerAlarm() {
-        Log.d(TAG, "startOriginalLongTimeUseBlockerAlarm");
-        updateLongTimeUseBlockerTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(mOldLongTimeBlockerStartTimeInMillis);
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerUsingMinutes);
-        long longTimeBlockerUsingEndTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerBlockingMinutes);
-        long longTimeBlockerBlockingEndTimeInMillis = calendar.getTimeInMillis();
-        Log.d(TAG, "mOldLongTimeBlockerStartTimeInMillis:" + mOldLongTimeBlockerStartTimeInMillis);
-        Log.d(TAG, "mLongTimeBlockerUsingMinutes:" + mLongTimeBlockerUsingMinutes);
-        Log.d(TAG, "mLongTimeBlockerBlockingMinutes:" + mLongTimeBlockerBlockingMinutes);
-        Log.d(TAG, "longTimeBlockerUsingEndTimeInMillis:" + longTimeBlockerUsingEndTimeInMillis);
-        Log.d(TAG, "longTimeBlockerBlockingEndTimeInMillis:" + longTimeBlockerBlockingEndTimeInMillis);
-        Log.d(TAG, "currentTimeInMillis:" + System.currentTimeMillis());
-        mLongTimeUsingBlockerAlarmManager.updateAlarm(
-                longTimeBlockerUsingEndTimeInMillis, longTimeBlockerBlockingEndTimeInMillis);
     }
 }
