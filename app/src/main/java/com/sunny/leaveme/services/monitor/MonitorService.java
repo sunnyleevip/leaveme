@@ -118,32 +118,30 @@ public class MonitorService extends Service {
     private long mScreenOffTimeInMillis = 0;
     private long mScreenOnTimeInMillis = 0;
     private final static long MILLIS_PER_MINUTE = 1000 * 60;
-    private MonitorState mMonitorState;
+    private MonitorState mMonitorState = new MonitorState(new MonitorState.OnStateChanger() {
+        @Override
+        public void OnStateChange(State oldState, State newState) {
+            switch (newState) {
+                case STATE_SCHEDULE_ON:
+                case STATE_LONG_TIME_USE_BLOCKER_ON:
+                case STATE_SURROUNDING_LIGHT_DARK_ON:
+                    startMonitorTimer();
+                    break;
+                case STATE_NONE:
+                    if (isScreenOn()) {
+                        stopMonitorTimer();
+                        stopScreenBlocker();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    });
 
     @Override
     public void onCreate() {
         mContext = this;
-
-        mMonitorState = new MonitorState(new MonitorState.OnStateChanger() {
-            @Override
-            public void OnStateChange(State oldState, State newState) {
-                switch (newState) {
-                    case STATE_SCHEDULE_ON:
-                    case STATE_LONG_TIME_USE_BLOCKER_ON:
-                    case STATE_SURROUNDING_LIGHT_DARK_ON:
-                        startMonitorTimer();
-                        break;
-                    case STATE_NONE:
-                        if (isScreenOn()) {
-                            stopMonitorTimer();
-                            stopScreenBlocker();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
 
         registerScreenLockReceiver();
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
