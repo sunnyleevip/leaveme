@@ -1,4 +1,4 @@
-package com.sunny.leaveme.services;
+package com.sunny.leaveme.services.schedule_manager;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -10,7 +10,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sunny.leaveme.common.ActionStr;
-import com.sunny.leaveme.common.ScheduleAlarmManager;
 import com.sunny.leaveme.db.DataHelper;
 import com.sunny.leaveme.db.entity.ScheduleItem;
 

@@ -26,7 +26,7 @@ import com.sunny.leaveme.activities.uihelper.ScheduleListAdapter;
 import com.sunny.leaveme.db.DataHelper;
 import com.sunny.leaveme.R;
 import com.sunny.leaveme.db.entity.ScheduleItem;
-import com.sunny.leaveme.services.ManagerService;
+import com.sunny.leaveme.services.schedule_manager.ManagerService;
 
 import java.util.ArrayList;
 

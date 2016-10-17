@@ -34,11 +34,11 @@
         <activity android:name=".activities.ScheduleItemActivity" />
 
         <service
-            android:name=".services.ManagerService"
+            android:name=".services.schedule_manager.ManagerService"
             android:enabled="true"
             android:exported="false" />
 
-        <receiver android:name=".services.ManagerService$receiver">
+        <receiver android:name=".services.schedule_manager.ManagerService$receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

@@ -1,8 +1,9 @@
-package com.sunny.leaveme.common;
+package com.sunny.leaveme.services.schedule_manager;
 
 import android.content.Context;
 import android.util.Log;
 
+import com.sunny.leaveme.common.ClassifiedAlarm;
 import com.sunny.leaveme.db.entity.ScheduleItem;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
  * Modified by Sunny Li on 2016/10/7.
  *   Change AlarmHelper to ClassifiedAlarm.
  */
-public class ScheduleAlarmManager {
+class ScheduleAlarmManager {
     private final static String TAG = "ScheduleAlarmManager";
     private final static String ALARM_TYPE_SCHEDULE_START = "Schedule Start Alarm";
     private final static String ALARM_TYPE_SCHEDULE_END = "Schedule End Alarm";
@@ -24,7 +25,7 @@ public class ScheduleAlarmManager {
     private ArrayList<Integer> mEndSchedules;
     private Context mContext;
 
-    public ScheduleAlarmManager(Context context,
+    ScheduleAlarmManager(Context context,
                                 OnScheduleAlarmTimeoutListener onScheduleAlarmTimeoutListener) {
         mContext = context;
         mAlarmItems = new ArrayList<>();
@@ -74,17 +75,17 @@ public class ScheduleAlarmManager {
         });
     }
 
-    public void finish() {
+    void finish() {
         ClassifiedAlarm.unregisterType(ALARM_TYPE_SCHEDULE_START);
         ClassifiedAlarm.unregisterType(ALARM_TYPE_SCHEDULE_END);
     }
 
-    public interface OnScheduleAlarmTimeoutListener {
+    interface OnScheduleAlarmTimeoutListener {
         void onScheduleStartAlarmTimeout(int id, boolean isRepeat);
         void onScheduleEndAlarmTimeout(int id, boolean isRepeat);
     }
 
-    public void startAlarms(ArrayList<ScheduleItem> scheduleItems) {
+    void startAlarms(ArrayList<ScheduleItem> scheduleItems) {
         Log.d(TAG, "startAlarms");
         for (int i = 0; i < scheduleItems.size(); ++i) {
             ScheduleItem scheduleItem = scheduleItems.get(i);
@@ -92,7 +93,7 @@ public class ScheduleAlarmManager {
         }
     }
 
-    public void startAlarm(ScheduleItem scheduleItem) {
+    void startAlarm(ScheduleItem scheduleItem) {
         Log.d(TAG, "startAlarm, id:" + scheduleItem.getId());
         if (scheduleItem.isAvailable()) {
             for (int i = 0; i < mAlarmItems.size(); ++i) {
@@ -115,7 +116,7 @@ public class ScheduleAlarmManager {
         }
     }
 
-    public void updateAlarm(ScheduleItem scheduleItem) {
+    void updateAlarm(ScheduleItem scheduleItem) {
         Log.d(TAG, "updateAlarm");
         cancelAlarm(scheduleItem.getId());
         if (scheduleItem.isAvailable()) {
@@ -123,7 +124,7 @@ public class ScheduleAlarmManager {
         }
     }
 
-    public void cancelAlarm(int id) {
+    void cancelAlarm(int id) {
         Log.d(TAG, "cancelAlarm, id:" + id);
         for (int i = 0; i < mAlarmItems.size(); ++i) {
             if (mAlarmItems.get(i).getId() == id) {
@@ -152,11 +153,11 @@ public class ScheduleAlarmManager {
         Log.d(TAG, "No exist alarm found, cannot cancel alarm id:" + id);
     }
 
-    public boolean isStartFirstSchedule() {
+    boolean isStartFirstSchedule() {
         return ((mEndSchedules.size() - mStartSchedules.size()) == 1);
     }
 
-    public boolean isEndLastSchedule() {
+    boolean isEndLastSchedule() {
         return (mEndSchedules.size() == mStartSchedules.size());
     }
 }
