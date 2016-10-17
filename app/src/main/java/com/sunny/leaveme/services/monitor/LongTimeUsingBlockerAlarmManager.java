@@ -1,8 +1,11 @@
 package com.sunny.leaveme.services.monitor;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.sunny.leaveme.common.ClassifiedAlarm;
+
+import java.util.Calendar;
 
 /**
  * Created by Sunny Li on 2016/10/7.
@@ -11,11 +14,14 @@ import com.sunny.leaveme.common.ClassifiedAlarm;
  */
 
 class LongTimeUsingBlockerAlarmManager {
+    private static final String TAG = "LTUBlockerAlarmManager";
     private final static String ALARM_TYPE_LONG_TIME_USING_BLOCKER = "Long Time Using Blocker Alarm";
     private final static int ALARM_ID_USING = 0;
     private final static int ALARM_ID_BLOCKING = 1;
     private Context mContext;
     private OnAlarmTimeoutListener mOnAlarmTimeoutListener;
+    private long mOldLongTimeBlockerStartTimeInMillis = 0;
+
     LongTimeUsingBlockerAlarmManager(Context context,
                                             OnAlarmTimeoutListener onAlarmTimeoutListener) {
         mContext = context;
@@ -37,16 +43,34 @@ class LongTimeUsingBlockerAlarmManager {
         ClassifiedAlarm.unregisterType(ALARM_TYPE_LONG_TIME_USING_BLOCKER);
     }
 
-    void updateAlarm(long usingMillis, long blockingMillis) {
+    void updateAlarm(long alarmStartTimeInMillis, int usingMinutes, int blockingMinutes) {
         cancelAlarm();
-        startAlarm(usingMillis, blockingMillis);
+        mOldLongTimeBlockerStartTimeInMillis = alarmStartTimeInMillis;
+        startAlarm(alarmStartTimeInMillis, usingMinutes, blockingMinutes);
     }
 
-    void startAlarm(long usingMillis, long blockingMillis) {
+    void restartAlarm(int usingMinutes, int blockingMinutes) {
+        cancelAlarm();
+        startAlarm(mOldLongTimeBlockerStartTimeInMillis, usingMinutes, blockingMinutes);
+    }
+
+    private void startAlarm(long alarmStartTimeInMillis, int usingMinutes, int blockingMinutes) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(alarmStartTimeInMillis);
+        calendar.add(Calendar.MINUTE, usingMinutes);
+        long longTimeBlockerUsingEndTimeInMillis = calendar.getTimeInMillis();
+        calendar.add(Calendar.MINUTE, blockingMinutes);
+        long longTimeBlockerBlockingEndTimeInMillis = calendar.getTimeInMillis();
+        Log.d(TAG, "alarmStartTimeInMillis:" + alarmStartTimeInMillis);
+        Log.d(TAG, "usingMinutes:" + usingMinutes);
+        Log.d(TAG, "blockingMinutes:" + blockingMinutes);
+        Log.d(TAG, "longTimeBlockerUsingEndTimeInMillis:" + longTimeBlockerUsingEndTimeInMillis);
+        Log.d(TAG, "longTimeBlockerBlockingEndTimeInMillis:" + longTimeBlockerBlockingEndTimeInMillis);
+        Log.d(TAG, "currentTimeInMillis:" + System.currentTimeMillis());
         ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER,
-                ALARM_ID_USING, usingMillis);
+                ALARM_ID_USING, longTimeBlockerUsingEndTimeInMillis);
         ClassifiedAlarm.startOneshotAlarm(mContext, ALARM_TYPE_LONG_TIME_USING_BLOCKER,
-                ALARM_ID_BLOCKING, blockingMillis);
+                ALARM_ID_BLOCKING, longTimeBlockerBlockingEndTimeInMillis);
     }
 
     void cancelAlarm() {

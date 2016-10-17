@@ -5,41 +5,33 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sunny.leaveme.common.ActionStr;
+import com.sunny.leaveme.common.PreferenceDataHelper;
 import com.sunny.leaveme.common.SensorReader;
 import com.sunny.leaveme.common.SensorReader.SensorChangedListener;
 import com.sunny.leaveme.activities.ScreenBlockerActivity;
 
 import java.lang.ref.WeakReference;
-import java.util.Calendar;
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static com.sunny.leaveme.services.monitor.MonitorState.State;
 
 public class MonitorService extends Service {
     private static final String TAG = "MonitorService";
     private final static int MONITOR_CHECK = 101;
     private final static float SENSOR_THRESHOLD_LIGHT_LOW = 1.0f;
-    private static final String PREFERENCE_KEY_LIGHT_DETECT = "auto_detected_surrounding_light_switch";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_SWITCH = "avoid_using_too_long_switch";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_USING_TIME = "etp_long_time_using_time";
-    private static final String PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_BLOCKING_TIME = "etp_long_time_blocking_time";
-
-    private int mReason = MONITOR_REASON_NONE;
-    private final static int MONITOR_REASON_NONE = 0;
-    private final static int MONITOR_REASON_ALARM = 1;
-    private final static int MONITOR_REASON_LIGHT = 2;
-    private final static int MONITOR_REASON_LONG_TIME_USING_BLOCK = 3;
 
     private LocalBroadcastManager mLocalBroadcastManager;
 
@@ -90,28 +82,47 @@ public class MonitorService extends Service {
     private int mLongTimeBlockerBlockingMinutes = 0;
     private long mScreenOffTimeInMillis = 0;
     private long mScreenOnTimeInMillis = 0;
-    private long mOldLongTimeBlockerStartTimeInMillis = 0;
     private final static long MILLIS_PER_MINUTE = 1000 * 60;
+    private MonitorState mMonitorState = new MonitorState(new MonitorState.OnStateChanger() {
+        @Override
+        public void OnStateChange(State oldState, State newState) {
+            switch (newState) {
+                case STATE_SCHEDULE_ON:
+                case STATE_LONG_TIME_USE_BLOCKER_ON:
+                case STATE_SURROUNDING_LIGHT_DARK_ON:
+                    startMonitorTimer();
+                    break;
+                case STATE_NONE:
+                    if (isScreenOn()) {
+                        stopMonitorTimer();
+                        stopScreenBlocker();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    });
 
     @Override
     public void onCreate() {
         mContext = this;
+
         registerScreenLockReceiver();
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ActionStr.ACTION_START_MONITOR);
-        intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR);
+        intentFilter.addAction(ActionStr.ACTION_SCHEDULE_ON);
+        intentFilter.addAction(ActionStr.ACTION_SCHEDULE_OFF);
         intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_TIMING_VALUE);
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, intentFilter);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mSensorReader = new SensorReader(this);
         if (mSensorReader.isEnabled(Sensor.TYPE_LIGHT)) {
             // support light sensor
-            if (prefs.getBoolean(PREFERENCE_KEY_LIGHT_DETECT, true)) {
+            if (PreferenceDataHelper.getLightDetectSwitchValue(this)) {
                 mSensorReader.setSensorChangedListener(Sensor.TYPE_LIGHT, mSensorChangedListener);
             }
         }
@@ -123,24 +134,19 @@ public class MonitorService extends Service {
                     @Override
                     public void onUsingAlarmTimeout() {
                         Log.d(TAG, "onUsingAlarmTimeout");
-                        if (mReason == MONITOR_REASON_NONE) {
-                            mReason = MONITOR_REASON_LONG_TIME_USING_BLOCK;
-                            startMonitorTimer();
-                        }
+                        mMonitorState.setState(State.STATE_LONG_TIME_USE_BLOCKER_ON);
                     }
 
                     @Override
                     public void onBlockingAlarmTimeout() {
                         Log.d(TAG, "onBlockingAlarmTimeout");
-                        if (mReason == MONITOR_REASON_LONG_TIME_USING_BLOCK) {
-                            stopMonitorTimer();
-                            stopScreenBlocker();
-                            mReason = MONITOR_REASON_NONE;
-                        }
+                        mMonitorState.setState(State.STATE_LONG_TIME_USE_BLOCKER_OFF);
                     }
                 });
-        if (prefs.getBoolean(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_SWITCH, true)) {
-            updateLongTimeUseBlockerAlarm();
+        if (PreferenceDataHelper.getLongTimeUseBlockerSwitchValue(mContext)) {
+            updateLongTimeUseBlockerTime();
+            mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                    mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
         }
 
         Log.d(TAG, "MonitorService onCreate");
@@ -167,15 +173,10 @@ public class MonitorService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "mLocalBroadcastReceiver.onReceive");
-            if (intent.getAction().equals(ActionStr.ACTION_START_MONITOR)) {
-                mReason = MONITOR_REASON_ALARM;
-                startMonitorTimer();
-                mSensorReader.start();
-            } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR)) {
-                mReason = MONITOR_REASON_NONE;
-                stopMonitorTimer();
-                mSensorReader.stop();
-                stopScreenBlocker();
+            if (intent.getAction().equals(ActionStr.ACTION_SCHEDULE_ON)) {
+                mMonitorState.setState(State.STATE_SCHEDULE_ON);
+            } else if (intent.getAction().equals(ActionStr.ACTION_SCHEDULE_OFF)) {
+                mMonitorState.setState(State.STATE_SCHEDULE_OFF);
             } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
                 stopMonitorTimer();
                 mSensorReader.stop();
@@ -187,15 +188,14 @@ public class MonitorService extends Service {
                 } else {
                     mSensorReader.removeSensorChangedListener(Sensor.TYPE_LIGHT);
                     mSensorReader.stopWithNoListener();
-                    if (mReason == MONITOR_REASON_LIGHT) {
-                        stopMonitorTimer();
-                        stopScreenBlocker();
-                    }
+                    mMonitorState.setState(State.STATE_SURROUNDING_LIGHT_DARK_OFF);
                 }
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE)) {
                 boolean isChecked = intent.getBooleanExtra("long_time_blocker_switch", true);
                 if (isChecked) {
-                    updateLongTimeUseBlockerAlarm();
+                    updateLongTimeUseBlockerTime();
+                    mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 } else {
                     mLongTimeUsingBlockerAlarmManager.cancelAlarm();
                 }
@@ -210,12 +210,9 @@ public class MonitorService extends Service {
         public void onSensorChanged(SensorEvent event) {
             Log.d(TAG, "onSensorChanged, value: " + event.values[0]);
             if (event.values[0] < SENSOR_THRESHOLD_LIGHT_LOW) {
-                mReason = MONITOR_REASON_LIGHT;
-                startMonitorTimer();
+                mMonitorState.setState(State.STATE_SURROUNDING_LIGHT_DARK_ON);
             } else {
-                mReason = MONITOR_REASON_NONE;
-                stopMonitorTimer();
-                stopScreenBlocker();
+                mMonitorState.setState(State.STATE_SURROUNDING_LIGHT_DARK_OFF);
             }
         }
     };
@@ -244,7 +241,7 @@ public class MonitorService extends Service {
             }
 
             if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                Log.d(TAG, "Do nothing");
+                Log.d(TAG, "Screen on, do nothing");
             } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 Log.d(TAG, "stop timer");
                 stopMonitorTimer();
@@ -254,12 +251,15 @@ public class MonitorService extends Service {
             } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
                 Log.d(TAG, "start timer");
                 tryStartScreenBlockerIfNeed();
+                mSensorReader.start();
                 mScreenOnTimeInMillis = System.currentTimeMillis();
                 updateLongTimeUseBlockerTime();
                 if (needUpdateBlockerAlarm()) {
-                    updateLongTimeUseBlockerAlarm();
+                    mLongTimeUsingBlockerAlarmManager.updateAlarm(System.currentTimeMillis(),
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 } else {
-                    startOriginalLongTimeUseBlockerAlarm();
+                    mLongTimeUsingBlockerAlarmManager.restartAlarm(
+                            mLongTimeBlockerUsingMinutes, mLongTimeBlockerBlockingMinutes);
                 }
             } else if (intent.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
                 String reason = intent.getStringExtra("reason");
@@ -322,7 +322,7 @@ public class MonitorService extends Service {
         if (mTimer != null) {
             if (!mIsTimerRunning) {
                 mIsTimerRunning = true;
-                mTimer.schedule(mTask, 1000, 500);
+                mTimer.schedule(mTask, 1000, 100);
             }
         }
     }
@@ -334,7 +334,6 @@ public class MonitorService extends Service {
         }
 
         PowerManager powerManager = (PowerManager)mContext.getSystemService(POWER_SERVICE);
-
         if (powerManager == null) {
             Log.e(TAG, "Cannot access PowerManager");
             return false;
@@ -355,59 +354,18 @@ public class MonitorService extends Service {
     }
 
     private void tryStartScreenBlockerIfNeed() {
-        if (mReason != MONITOR_REASON_NONE) {
+        if (mMonitorState.getState() != State.STATE_NONE) {
             startMonitorTimer();
-            mSensorReader.start();
         }
     }
 
     private void updateLongTimeUseBlockerTime() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mLongTimeBlockerUsingMinutes = Integer.parseInt(
-                prefs.getString(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_USING_TIME, "0"));
-        mLongTimeBlockerBlockingMinutes = Integer.parseInt(
-                prefs.getString(PREFERENCE_KEY_LONG_TIME_USE_BLOCKER_BLOCKING_TIME, "0"));
+        mLongTimeBlockerUsingMinutes = PreferenceDataHelper.getLongTimeUseBlockerUsingTimeValue(mContext);
+        mLongTimeBlockerBlockingMinutes = PreferenceDataHelper.getLongTimeUseBlockerBlockingTimeValue(mContext);
     }
 
     private boolean needUpdateBlockerAlarm() {
         return (mScreenOnTimeInMillis - mScreenOffTimeInMillis) >
                 mLongTimeBlockerBlockingMinutes * MILLIS_PER_MINUTE;
-    }
-
-    private void updateLongTimeUseBlockerAlarm() {
-        Log.d(TAG, "updateLongTimeUseBlockerAlarm");
-        updateLongTimeUseBlockerTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        mOldLongTimeBlockerStartTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerUsingMinutes);
-        long longTimeBlockerUsingEndTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerBlockingMinutes);
-        long longTimeBlockerBlockingEndTimeInMillis = calendar.getTimeInMillis();
-        Log.d(TAG, "mOldLongTimeBlockerStartTimeInMillis:" + mOldLongTimeBlockerStartTimeInMillis);
-        Log.d(TAG, "mLongTimeBlockerUsingMinutes:" + mLongTimeBlockerUsingMinutes);
-        Log.d(TAG, "mLongTimeBlockerBlockingMinutes:" + mLongTimeBlockerBlockingMinutes);
-        Log.d(TAG, "longTimeBlockerUsingEndTimeInMillis:" + longTimeBlockerUsingEndTimeInMillis);
-        Log.d(TAG, "longTimeBlockerBlockingEndTimeInMillis:" + longTimeBlockerBlockingEndTimeInMillis);
-        mLongTimeUsingBlockerAlarmManager.updateAlarm(
-                longTimeBlockerUsingEndTimeInMillis, longTimeBlockerBlockingEndTimeInMillis);
-    }
-
-    private void startOriginalLongTimeUseBlockerAlarm() {
-        Log.d(TAG, "startOriginalLongTimeUseBlockerAlarm");
-        updateLongTimeUseBlockerTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(mOldLongTimeBlockerStartTimeInMillis);
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerUsingMinutes);
-        long longTimeBlockerUsingEndTimeInMillis = calendar.getTimeInMillis();
-        calendar.add(Calendar.MINUTE, mLongTimeBlockerBlockingMinutes);
-        long longTimeBlockerBlockingEndTimeInMillis = calendar.getTimeInMillis();
-        Log.d(TAG, "mOldLongTimeBlockerStartTimeInMillis:" + mOldLongTimeBlockerStartTimeInMillis);
-        Log.d(TAG, "mLongTimeBlockerUsingMinutes:" + mLongTimeBlockerUsingMinutes);
-        Log.d(TAG, "mLongTimeBlockerBlockingMinutes:" + mLongTimeBlockerBlockingMinutes);
-        Log.d(TAG, "longTimeBlockerUsingEndTimeInMillis:" + longTimeBlockerUsingEndTimeInMillis);
-        Log.d(TAG, "longTimeBlockerBlockingEndTimeInMillis:" + longTimeBlockerBlockingEndTimeInMillis);
-        mLongTimeUsingBlockerAlarmManager.updateAlarm(
-                longTimeBlockerUsingEndTimeInMillis, longTimeBlockerBlockingEndTimeInMillis);
     }
 }
