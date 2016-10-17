@@ -8,8 +8,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 /**
- * Created by sunnyl on 2016/10/14.
- * Try to know the active activity is your own activity or not.
+ * Created by Sunny Li on 2016/10/14.
+ * Get current process name.
  */
 
 class ActivityManagerHelper {
