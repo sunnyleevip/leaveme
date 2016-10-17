@@ -12,8 +12,8 @@ public class ActionStr {
             = "com.sunny.leaveme.ACTION_SCHEDULE_ON";
     public final static String ACTION_SCHEDULE_OFF
             = "com.sunny.leaveme.ACTION_SCHEDULE_OFF";
-    public final static String ACTION_STOP_MONITOR_AND_KEEP_REASON
-            = "com.sunny.leaveme.ACTION_STOP_MONITOR_AND_KEEP_REASON";
+    public final static String ACTION_WHITELIST_APP_START
+            = "com.sunny.leaveme.ACTION_WHITELIST_APP_START";
     public final static String ACTION_UPDATE_LIGHT_SWITCH_VALUE
             = "com.sunny.leaveme.ACTION_UPDATE_LIGHT_SWITCH_VALUE";
     public final static String ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE

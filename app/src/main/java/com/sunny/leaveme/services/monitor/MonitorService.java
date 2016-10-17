@@ -81,6 +81,7 @@ public class MonitorService extends Service {
     private long mScreenOffTimeInMillis = 0;
     private long mScreenOnTimeInMillis = 0;
     private final static long MILLIS_PER_MINUTE = 1000 * 60;
+
     private MonitorState mMonitorState = new MonitorState(new MonitorState.OnStateChanger() {
         @Override
         public void OnStateChange(State oldState, State newState) {
@@ -111,7 +112,7 @@ public class MonitorService extends Service {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ActionStr.ACTION_SCHEDULE_ON);
         intentFilter.addAction(ActionStr.ACTION_SCHEDULE_OFF);
-        intentFilter.addAction(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON);
+        intentFilter.addAction(ActionStr.ACTION_WHITELIST_APP_START);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_SWITCH_VALUE);
         intentFilter.addAction(ActionStr.ACTION_UPDATE_LONG_TIME_BLOCKER_TIMING_VALUE);
@@ -175,7 +176,7 @@ public class MonitorService extends Service {
                 mMonitorState.setState(State.STATE_SCHEDULE_ON);
             } else if (intent.getAction().equals(ActionStr.ACTION_SCHEDULE_OFF)) {
                 mMonitorState.setState(State.STATE_SCHEDULE_OFF);
-            } else if (intent.getAction().equals(ActionStr.ACTION_STOP_MONITOR_AND_KEEP_REASON)) {
+            } else if (intent.getAction().equals(ActionStr.ACTION_WHITELIST_APP_START)) {
                 stopMonitorTimer();
                 mSensorReader.stop();
             } else if (intent.getAction().equals(ActionStr.ACTION_UPDATE_LIGHT_SWITCH_VALUE)) {
